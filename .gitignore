@@ -1,0 +1,11 @@
+.vs
+/SupervisedLearning/SupervisedLearning/bin
+/SupervisedLearning/SupervisedLearning/obj
+/SupervisedLearning/Concepts_Tests/obj
+/SupervisedLearning/Concepts_Tests/*.user
+/SupervisedLearning/Concepts_Tests/bin
+/SupervisedLearning/Concepts/bin
+/SupervisedLearning/Concepts/obj
+/SupervisedLearning/CombinatorialSpace/bin
+/SupervisedLearning/CombinatorialSpace/obj
+/SupervisedLearning/packages
