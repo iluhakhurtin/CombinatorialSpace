@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Concepts.TextConcepts
 {
-    public interface ITextConceptSystemBuilder : IConceptSystemBuilder<String>
+    public interface ICharConceptSystemBuilder : IConceptSystemBuilder<char, byte>
     {        
 
     }

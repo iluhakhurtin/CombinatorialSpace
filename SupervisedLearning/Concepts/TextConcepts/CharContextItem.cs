@@ -6,11 +6,13 @@ using System.Text;
 
 namespace Concepts.TextConcepts
 {
-    class TextContextItem : IConceptItem<string>
+    class CharContextItem : IConceptItem<char, byte>
     {
         #region Properties 
 
-        public string Value { get; set; }
+        public byte Context { get; set; }
+
+        public char Value { get; set; }
 
         public BitArray Vector { get; set; }
 
@@ -18,14 +20,21 @@ namespace Concepts.TextConcepts
 
         #region Constructors
 
-        public TextContextItem()
+        public CharContextItem()
         {
         }
 
-        public TextContextItem(string value, BitArray vector)
+        public CharContextItem(char value, BitArray vector)
+            : this(value, vector, 0)
+        {
+            
+        }
+
+        public CharContextItem(char value, BitArray vector, byte context)
         {
             this.Value = value;
             this.Vector = vector;
+            this.Context = context;
         }
 
         #endregion

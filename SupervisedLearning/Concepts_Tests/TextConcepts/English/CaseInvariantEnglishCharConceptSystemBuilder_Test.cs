@@ -9,14 +9,14 @@ using Xunit;
 
 namespace Concepts_Tests.TextConcepts.English
 {
-    public class CaseInvariantEnglishTextConceptSystemBuilder_Test : BaseTest
+    public class CaseInvariantEnglishCharConceptSystemBuilder_Test : BaseTest
     {
-        CaseInvariantEnglishTextConceptSystemBuilder caseInvariantEnglishTextConceptSystemBuilder;
+        CaseInvariantEnglishCharConceptSystemBuilder caseInvariantEnglishTextConceptSystemBuilder;
 
-        public CaseInvariantEnglishTextConceptSystemBuilder_Test()
+        public CaseInvariantEnglishCharConceptSystemBuilder_Test()
         {
             IBinaryVectorBuilder binaryVectorBuilder = new RandomBinaryVectorBuilder();
-            caseInvariantEnglishTextConceptSystemBuilder = new CaseInvariantEnglishTextConceptSystemBuilder(binaryVectorBuilder);
+            caseInvariantEnglishTextConceptSystemBuilder = new CaseInvariantEnglishCharConceptSystemBuilder(binaryVectorBuilder);
         }
 
 

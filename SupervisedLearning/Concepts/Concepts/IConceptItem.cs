@@ -5,9 +5,10 @@ using System.Text;
 
 namespace Concepts.Concepts
 {
-    public interface IConceptItem<out T>
+    public interface IConceptItem<out TValue, out TContext>
     {
-        T Value { get; }
+        TValue Value { get; }
+        TContext Context { get; }
         BitArray Vector { get; }
     }
 }

@@ -17,4 +17,10 @@
     <ProjectReference Include="..\Concepts\Concepts.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="TextConcepts\English\jack_london_children_of_the_frost.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

@@ -7,24 +7,24 @@ using Concepts.Concepts;
 
 namespace Concepts.TextConcepts.English
 {
-    public class CaseInvariantEnglishTextConceptSystemBuilder : ITextConceptSystemBuilder
+    public class CaseInvariantEnglishCharConceptSystemBuilder : ICharConceptSystemBuilder
     {
         IBinaryVectorBuilder binaryVectorBuilder;
 
-        public CaseInvariantEnglishTextConceptSystemBuilder(IBinaryVectorBuilder binaryVectorBuilder)
+        public CaseInvariantEnglishCharConceptSystemBuilder(IBinaryVectorBuilder binaryVectorBuilder)
         {
             this.binaryVectorBuilder = binaryVectorBuilder;
         }
 
 
-        public IEnumerable<IConceptItem<string>> Build(int contextsNumber, int conceptVectorLength, int conceptMaskLength)
+        public IEnumerable<IConceptItem<char, byte>> Build(int contextsCount, int conceptVectorLength, int conceptMaskLength)
         {
             for (char c = 'a'; c <= 'z'; c++)
             {
-                for(byte contextIdx = 0; contextIdx < contextsNumber; contextIdx++)
+                for(byte contextIdx = 0; contextIdx < contextsCount; contextIdx++)
                 {
                     BitArray vector = this.binaryVectorBuilder.BuildVector(conceptVectorLength, conceptMaskLength);
-                    var conceptItem = new TextContextItem(c.ToString(), vector);
+                    var conceptItem = new CharContextItem(c, vector, contextIdx);
                     yield return conceptItem;
                 }
             }
