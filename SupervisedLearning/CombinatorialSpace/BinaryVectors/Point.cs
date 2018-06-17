@@ -8,6 +8,10 @@ namespace CombinatorialSpace.BinaryVectors
     {
         private HashSet<int> trackingBitsIndexes;
 
+        public bool Out { get; private set; }
+
+        #region Constructor
+        
         public Point(Random random, int numberOfTrackingBits, int trackingBinaryVectorLength)
         {
             this.trackingBitsIndexes = new HashSet<int>();
@@ -27,6 +31,10 @@ namespace CombinatorialSpace.BinaryVectors
                     currentTrackingBitNumber++;
             }
         }
+
+        #endregion
+
+        #region Equals and operators
 
         public override bool Equals(object obj)
         {
@@ -55,5 +63,7 @@ namespace CombinatorialSpace.BinaryVectors
         {
             return !(point1 == point2);
         }
+
+        #endregion
     }
 }
