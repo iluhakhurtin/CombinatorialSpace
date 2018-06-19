@@ -56,12 +56,11 @@ namespace CombinatorialSpace_Tests
             HashSet<int> trackingBitsIndexes = new HashSet<int>(trackingBitsIndexesArray);
             int activationThreshold = 4;
 
-            AutoResetEvent autoResetEvent = new AutoResetEvent(false);
-
             ICluster cluster = new Cluster(trackingBitsIndexes, activationThreshold);
+            bool clusterActivated = false;
             cluster.ClusterActivated += (sender, e) =>
             {
-                autoResetEvent.Set();
+                clusterActivated = true;
             };
 
             bool[] bitArray = new bool[]
@@ -82,8 +81,17 @@ namespace CombinatorialSpace_Tests
             };
             BitArray vector = new BitArray(bitArray);
             cluster.Check(vector);
-            //добавить таймер и убедиться, что хэндлер не срабатывает
-            Assert.False(autoResetEvent.WaitOne());
+
+            AutoResetEvent autoResetEvent = new AutoResetEvent(false);
+            TimerCallback timerCallback = new TimerCallback(delegate (object target)
+            {
+                autoResetEvent.Set();
+            });
+
+            Timer timer = new Timer(timerCallback, null, 0, 500);
+
+            Assert.True(autoResetEvent.WaitOne());
+            Assert.False(clusterActivated); //This is the test
         }
     }
 }

@@ -12,9 +12,8 @@ namespace CombinatorialSpace.BinaryVectors
 
     }
 
-    public interface ICluster
+    public interface ICluster : IBitArrayChecker
     {
-        void Check(BitArray vector);
         event ClusterActivatedEventHandler ClusterActivated;
     }
 }

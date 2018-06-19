@@ -21,9 +21,16 @@ namespace CombinatorialSpace_Tests
             //see page 7 in https://habrahabr.ru/post/326334/
             int combinatorialSpaceLength = 60000;
             int numberOfTrackingBits = 32;
+            int clusterCreationThreshold = 6;
+            int clusterActivationThreshold = 4;
             int trackingBinaryVectorLength = 256;
 
-            var combinatorialSpace = this.combinatorialSpaceBuilder.Build(combinatorialSpaceLength, numberOfTrackingBits, trackingBinaryVectorLength);
+            var combinatorialSpace = this.combinatorialSpaceBuilder.Build(
+                combinatorialSpaceLength, 
+                numberOfTrackingBits, 
+                clusterCreationThreshold, 
+                clusterActivationThreshold, 
+                trackingBinaryVectorLength);
             var combinatorialSpaceList = combinatorialSpace.ToList();
 
             int actualCount = 0;

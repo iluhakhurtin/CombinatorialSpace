@@ -6,6 +6,11 @@ namespace CombinatorialSpace.BinaryVectors
 {
     public interface ICombinatorialSpaceBuilder
     {
-        IEnumerable<IPoint> Build(int combinatorialSpaceLength, int numberOfTrackingBits, int trackingBinaryVectorLength);
+        IEnumerable<IPoint> Build(
+            int combinatorialSpaceLength, 
+            int numberOfTrackingBits, 
+            int clusterCreationThreshold, 
+            int clusterActivationThreshold,
+            int trackingBinaryVectorLength);
     }
 }

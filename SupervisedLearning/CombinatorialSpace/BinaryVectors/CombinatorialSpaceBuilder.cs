@@ -13,11 +13,21 @@ namespace CombinatorialSpace.BinaryVectors
             this.random = new Random((int)DateTime.Now.Ticks);
         }
 
-        public IEnumerable<IPoint> Build(int combinatorialSpaceLength, int numberOfTrackingBits, int trackingBinaryVectorLength)
+        public IEnumerable<IPoint> Build(
+            int combinatorialSpaceLength, 
+            int numberOfTrackingBits, 
+            int clusterCreationThreshold, 
+            int clusterActivationThreshold, 
+            int trackingBinaryVectorLength)
         {
             for (int i = 0; i < combinatorialSpaceLength; i++)
             {
-                IPoint result = new Point(this.random, numberOfTrackingBits, trackingBinaryVectorLength);
+                IPoint result = new Point(
+                    this.random, 
+                    numberOfTrackingBits, 
+                    clusterCreationThreshold, 
+                    clusterActivationThreshold, 
+                    trackingBinaryVectorLength);
                 yield return result;
             }
         }
