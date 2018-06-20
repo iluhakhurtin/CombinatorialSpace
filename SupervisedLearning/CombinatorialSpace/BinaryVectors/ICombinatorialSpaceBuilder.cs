@@ -11,6 +11,7 @@ namespace CombinatorialSpace.BinaryVectors
             int numberOfTrackingBits, 
             int clusterCreationThreshold, 
             int clusterActivationThreshold,
-            int trackingBinaryVectorLength);
+            int trackingBinaryVectorLength,
+            int outputBinaryVectorLength);
     }
 }

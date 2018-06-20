@@ -7,14 +7,12 @@ using System.Threading.Tasks;
 
 namespace CombinatorialSpace.BinaryVectors
 {
-    public class Cluster : ICluster, ITrackingIndexes
+    public class Cluster : ICluster
     {
         public event ClusterActivatedEventHandler ClusterActivated;
 
         private HashSet<int> trackingBitsIndexes;
         private int activationThreshold = 0;
-
-        HashSet<int> ITrackingIndexes.TrackingIndexes => this.trackingBitsIndexes;
 
         #region Constructors
 
@@ -80,8 +78,17 @@ namespace CombinatorialSpace.BinaryVectors
 
         public override bool Equals(object obj)
         {
-            bool result = TrackingIndexesEqualsStrategy.Equals<Cluster>(obj, this);
-            return result;
+            Cluster target = obj as Cluster;
+            if (target == null)
+                return false;
+
+            foreach (int trackingBitIdx in this.trackingBitsIndexes)
+            {
+                if (!target.trackingBitsIndexes.Contains(trackingBitIdx))
+                    return false;
+            }
+
+            return true;
         }
 
         public static bool operator ==(Cluster cluster1, Cluster cluster2)

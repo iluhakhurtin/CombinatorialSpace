@@ -18,16 +18,23 @@ namespace CombinatorialSpace.BinaryVectors
             int numberOfTrackingBits, 
             int clusterCreationThreshold, 
             int clusterActivationThreshold, 
-            int trackingBinaryVectorLength)
+            int trackingInputBinaryVectorLength,
+            int outputBinaryVectorLength)
         {
             for (int i = 0; i < combinatorialSpaceLength; i++)
             {
+                //to definitely cover all bits of the output vector
+                //there is a loop along the indexes of the vector
+                int outputBitIndex = i % outputBinaryVectorLength;
+
                 IPoint result = new Point(
                     this.random, 
                     numberOfTrackingBits, 
                     clusterCreationThreshold, 
                     clusterActivationThreshold, 
-                    trackingBinaryVectorLength);
+                    trackingInputBinaryVectorLength,
+                    outputBitIndex);
+
                 yield return result;
             }
         }

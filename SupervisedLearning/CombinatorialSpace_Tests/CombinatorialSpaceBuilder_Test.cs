@@ -24,13 +24,15 @@ namespace CombinatorialSpace_Tests
             int clusterCreationThreshold = 6;
             int clusterActivationThreshold = 4;
             int trackingBinaryVectorLength = 256;
+            int outputBinaryVectorLength = 256;
 
             var combinatorialSpace = this.combinatorialSpaceBuilder.Build(
                 combinatorialSpaceLength, 
                 numberOfTrackingBits, 
                 clusterCreationThreshold, 
                 clusterActivationThreshold, 
-                trackingBinaryVectorLength);
+                trackingBinaryVectorLength,
+                outputBinaryVectorLength);
             var combinatorialSpaceList = combinatorialSpace.ToList();
 
             int actualCount = 0;

@@ -6,16 +6,13 @@ using System.Text;
 
 namespace CombinatorialSpace.BinaryVectors
 {
-    public class Point : IPoint, ITrackingIndexes
+    public class Point : IPoint
     {
         private HashSet<int> trackingBitsIndexes;
         private int clusterCreationThreshold;
         private int clusterActivationThreshold;
         private HashSet<ICluster> clusters;
-
-        public bool Out { get; private set; }
-
-        HashSet<int> ITrackingIndexes.TrackingIndexes => this.trackingBitsIndexes;
+        private int outputBitIndex;
 
         #region Constructor
 
@@ -32,26 +29,31 @@ namespace CombinatorialSpace.BinaryVectors
             int numberOfTrackingBits, 
             int clusterCreationThreshold, 
             int clusterActivationThreshold, 
-            int trackingBinaryVectorLength)
+            int trackingInputBinaryVectorLength,
+            int outputBitIndex)
         {
             this.trackingBitsIndexes = new HashSet<int>();
             this.clusters = new HashSet<ICluster>();
             this.clusterCreationThreshold = clusterCreationThreshold;
             this.clusterActivationThreshold = clusterActivationThreshold;
+            this.outputBitIndex = outputBitIndex;
 
-            this.Initialize(random, numberOfTrackingBits, trackingBinaryVectorLength);
+            this.Initialize(random, numberOfTrackingBits, trackingInputBinaryVectorLength);
         }
 
-        private void Initialize(Random random, int numberOfTrackingBits, int trackingBinaryVectorLength)
+        private void Initialize(
+            Random random, 
+            int numberOfTrackingBits, 
+            int trackingBinaryVectorLength)
         {
             //maximum index in a bit vector is fewer than length in 1 because it starts from 0
-            int maxBinaryVectorIdx = trackingBinaryVectorLength - 1;
+            int maxInputBinaryVectorIdx = trackingBinaryVectorLength - 1;
 
             int currentTrackingBitNumber = 0;
             while (currentTrackingBitNumber < numberOfTrackingBits)
             {
-                int trackingBitIdx = random.Next(0, maxBinaryVectorIdx);
-                if (trackingBitsIndexes.Add(trackingBitIdx))
+                int trackingBitIdx = random.Next(0, maxInputBinaryVectorIdx);
+                if (this.trackingBitsIndexes.Add(trackingBitIdx))
                     currentTrackingBitNumber++;
             }
         }
@@ -77,8 +79,20 @@ namespace CombinatorialSpace.BinaryVectors
 
         public override bool Equals(object obj)
         {
-            bool result = TrackingIndexesEqualsStrategy.Equals<Point>(obj, this);
-            return result;
+            Point target = obj as Point;
+            if (target == null)
+                return false;
+
+            if (target.outputBitIndex != this.outputBitIndex)
+                return false;
+
+            foreach (int trackingBitIdx in this.trackingBitsIndexes)
+            {
+                if (!target.trackingBitsIndexes.Contains(trackingBitIdx))
+                    return false;
+            }
+
+            return true;
         }
 
         public static bool operator ==(Point point1, Point point2)
