@@ -43,6 +43,31 @@ namespace Concepts_Tests.TextConcepts.English
         }
 
         [Fact]
+        public void Fragments_are_the_same_for_the_same_text_file_with_the_same_initial_contexts()
+        {
+            byte contextsCount = 10;
+            int conceptVectorLength = 256;
+            int conceptMaskLength = 8;
+            int conceptsFragmentLength = 5;
+
+            string fileName = this.GetTestFileName();
+
+            using (FileStream fs0 = new FileStream(fileName, FileMode.Open, FileAccess.Read))
+            using (FileStream fs1 = new FileStream(fileName, FileMode.Open, FileAccess.Read))
+            {
+                var conceptsFragments0 = conceptsFragmentsStreamReader.GetConceptsFragments(fs0, contextsCount, conceptVectorLength, conceptMaskLength, conceptsFragmentLength);
+                var conceptsFragments1 = conceptsFragmentsStreamReader.GetConceptsFragments(fs1, contextsCount, conceptVectorLength, conceptMaskLength, conceptsFragmentLength);
+                foreach (var conceptFragment0 in conceptsFragments0)
+                {
+                    foreach (var conceptFragment1 in conceptsFragments1)
+                    {
+                        Assert.NotEqual<BitArray>(conceptFragment0.Vector, conceptFragment1.Vector);
+                    }
+                }
+            }
+        }
+
+        [Fact]
         public void Fragments_are_different_for_the_same_text_file_with_different_initial_contexts()
         {
             byte contextsCount = 10;

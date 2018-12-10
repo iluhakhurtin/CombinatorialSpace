@@ -9,9 +9,16 @@ namespace Concepts.BinaryVectorsBuilders
     {
         private Random random;
 
-        public RandomBinaryVectorBuilder()
+        public RandomBinaryVectorBuilder(bool useRandomSeed = false)
         {
-            random = new Random((int)DateTime.Now.Ticks);
+            if (useRandomSeed)
+            {
+                random = new Random((int)DateTime.Now.Ticks);
+            }
+            else
+            {
+                random = new Random();
+            }
         }
 
         /// <summary>
