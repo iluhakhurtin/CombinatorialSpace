@@ -14,8 +14,11 @@ namespace Concepts.Concepts
     public interface IConceptsFragment<TValue, TContext>
     {
         int ConceptsCount { get; }
+
         IEnumerable<IConceptItem<TValue, TContext>> Concepts { get;  }
-        BitArray Vector { get; }        
+        
+        BitArray Vector { get; }
+
         void AddConcept(IConceptItem<TValue, TContext> concept);
     }
 }

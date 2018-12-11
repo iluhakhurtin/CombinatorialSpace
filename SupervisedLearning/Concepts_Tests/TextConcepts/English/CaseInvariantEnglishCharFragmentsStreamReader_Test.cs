@@ -70,6 +70,26 @@ namespace Concepts_Tests.TextConcepts.English
         [Fact]
         public void Fragments_are_different_for_the_same_text_file_with_different_initial_contexts()
         {
+            // this test represents example given by Alexey Redozubov in his article here: https://habr.com/post/326334/
+            // it refers to the place where he describes two different concepts fragment built on the same text fragment 
+            // BUT with different position of the cyclic identifier:
+
+            // Описание, составленное таким образом, хранит не только набор букв фрагмента текста, но и их последовательность. 
+
+            // This description pertains IConceptsFragment in this application.
+
+            // Однако и набор понятий, и суммарный код этой последовательности зависит от того, в какой позиции находился циклический
+            // идентификатор на момент, когда последовательность появилась в тексте. На рисунке ниже приведен пример того, как описание 
+            // одного и того же     фрагмента текста зависит от начального положения циклического идентификатора.
+            // https://hsto.org/getpro/habr/post_images/ee1/2e8/c02/ee12e8c026e408847a4744469c2f96b1.png
+            // Изменение кодировки текста при разном начальном смещении
+            // Первому случаю будет соответствовать описание
+            // { s1,w3,e4,d6}
+            // Второй случай будет записан, как
+            // { s9,w1,e2,d4}
+            // В результате текст один и тот же, но совсем другой набор понятий и, соответственно, 
+            // совсем другой описывающий его бинарный код.
+
             byte contextsCount = 10;
             int conceptVectorLength = 256;
             int conceptMaskLength = 8;

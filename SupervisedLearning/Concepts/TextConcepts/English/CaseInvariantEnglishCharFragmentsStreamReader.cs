@@ -56,7 +56,7 @@ namespace Concepts.TextConcepts.English
                     if(Char.IsLetter(symbol))
                     {
                         char lowerCaseChar = Char.ToLower(symbol);
-                        //this is cyclic identifier. its maximum value is contextsCount - 1 because 
+                        //this is a cyclic identifier. its maximum value is contextsCount - 1 because 
                         //indexes starts from  0. initialContext is a shift from the initial context index (0)
                         //For example, if initialContext is 2, then the first character is considered to be in the 
                         //2nd context, and all characters positions for the same stream are shifted in 2 positions.

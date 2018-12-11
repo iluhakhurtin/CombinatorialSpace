@@ -5,8 +5,9 @@ using System.Text;
 
 namespace CombinatorialSpace.BinaryVectors
 {
-    public interface IPoint : IBitArrayChecker
+    public interface IPoint
     {
-        
+        IEnumerable<ICluster> Clusters { get; }
+        void Check(BitArray inputVector, BitArray outputVector);
     }
 }

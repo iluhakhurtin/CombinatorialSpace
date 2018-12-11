@@ -14,6 +14,11 @@ namespace CombinatorialSpace.BinaryVectors
         private HashSet<ICluster> clusters;
         private int outputBitIndex;
 
+        public IEnumerable<ICluster> Clusters
+        {
+            get { return this.clusters; }
+        }
+
         #region Constructor
 
         /// <summary>
@@ -41,6 +46,19 @@ namespace CombinatorialSpace.BinaryVectors
             this.Initialize(random, numberOfTrackingBits, trackingInputBinaryVectorLength);
         }
 
+        public Point(
+            HashSet<int> trackingBitsIndexes, 
+            int outputBitIndex, 
+            int clusterCreationThreshold,
+            int clusterActivationThreshold)
+        {
+            this.clusters = new HashSet<ICluster>();
+            this.trackingBitsIndexes = trackingBitsIndexes;
+            this.outputBitIndex = outputBitIndex;
+            this.clusterCreationThreshold = clusterCreationThreshold;
+            this.clusterActivationThreshold = clusterActivationThreshold;
+        }
+
         private void Initialize(
             Random random, 
             int numberOfTrackingBits, 
@@ -62,14 +80,25 @@ namespace CombinatorialSpace.BinaryVectors
 
         #region Methods
 
-        public void Check(BitArray vector)
+        public void Check(BitArray inputVector, BitArray outputVector)
         {
-            BitArrayCheckStrategy.CheckBitArray(vector, this.trackingBitsIndexes, this.clusterCreationThreshold, this.PointActivatedCallback);
+            if (inputVector == null || outputVector == null)
+                return;
+
+            if (outputVector[this.outputBitIndex])
+            {
+                BitArrayCheckStrategy.CheckBitArray(inputVector, this.trackingBitsIndexes, this.clusterCreationThreshold, this.PointActivatedCallback);
+            }
         }
 
-        private void PointActivatedCallback(BitArray vector)
+        /// <summary>
+        /// This callback can be called only if the output bit in the vector is active, 
+        /// see method Check(BitArray inputVector, BitArray outputVector).
+        /// </summary>
+        /// <param name="inputVector">Input vector</param>
+        private void PointActivatedCallback(BitArray inputVector)
         {
-            ICluster cluster = new Cluster(vector, this.clusterActivationThreshold);
+            ICluster cluster = new Cluster(inputVector, this.clusterActivationThreshold);
             this.clusters.Add(cluster);
         }
 
