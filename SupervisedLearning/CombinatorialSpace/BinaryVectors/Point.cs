@@ -1,34 +1,40 @@
-﻿using CombinatorialSpace.Strategies;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Text;
+using System.Threading.Tasks;
 
 namespace CombinatorialSpace.BinaryVectors
 {
+    /// <summary>
+    /// Implements IPoint interface.
+    /// </summary>
     public class Point : IPoint
     {
+        #region Fields
+
         private HashSet<int> trackingBitsIndexes;
+
+        private HashSet<int> clusterBitsIndexes;
+
         private int clusterCreationThreshold;
+
         private int clusterActivationThreshold;
-        private HashSet<ICluster> clusters;
+
         private int outputBitIndex;
 
-        public IEnumerable<ICluster> Clusters
-        {
-            get { return this.clusters; }
-        }
+        #endregion
 
         #region Constructor
 
         /// <summary>
-        /// Creates a new object of a point - container for clusters
+        /// Creates a new object of a point. 
         /// </summary>
         /// <param name="random">Is necessary to randomly initialize tracking bits.</param>
-        /// <param name="numberOfTrackingBits">How many bits in a vector the point checks.</param>
+        /// <param name="numberOfTrackingBits">How many bits in an input vector the point checks.</param>
         /// <param name="clusterCreationThreshold">How many activated bits in the vector should force creation of a new cluster.</param>
         /// <param name="clusterActivationThreshold">How many activated bits in the vector should trigger activation of a cluster.</param>
-        /// <param name="trackingBinaryVectorLength">Length of an input vector to initialize randomly tracking bits.</param>
+        /// <param name="trackingInputBinaryVectorLength">Length of an input vector to initialize randomly tracking bits.</param>
+        /// <param name="outputBitIndex">Index of an active bit in the output vector.</param>
         public Point(
             Random random, 
             int numberOfTrackingBits, 
@@ -38,7 +44,8 @@ namespace CombinatorialSpace.BinaryVectors
             int outputBitIndex)
         {
             this.trackingBitsIndexes = new HashSet<int>();
-            this.clusters = new HashSet<ICluster>();
+            this.clusterBitsIndexes = new HashSet<int>();
+
             this.clusterCreationThreshold = clusterCreationThreshold;
             this.clusterActivationThreshold = clusterActivationThreshold;
             this.outputBitIndex = outputBitIndex;
@@ -52,8 +59,8 @@ namespace CombinatorialSpace.BinaryVectors
             int clusterCreationThreshold,
             int clusterActivationThreshold)
         {
-            this.clusters = new HashSet<ICluster>();
             this.trackingBitsIndexes = trackingBitsIndexes;
+            this.clusterBitsIndexes = new HashSet<int>();
             this.outputBitIndex = outputBitIndex;
             this.clusterCreationThreshold = clusterCreationThreshold;
             this.clusterActivationThreshold = clusterActivationThreshold;
@@ -80,27 +87,76 @@ namespace CombinatorialSpace.BinaryVectors
 
         #region Methods
 
-        public void Check(BitArray inputVector, BitArray outputVector)
+        public void Train(BitArray inputVector, BitArray outputVector)
         {
             if (inputVector == null || outputVector == null)
                 return;
 
             if (outputVector[this.outputBitIndex])
             {
-                BitArrayCheckStrategy.CheckBitArray(inputVector, this.trackingBitsIndexes, this.clusterCreationThreshold, this.PointActivatedCallback);
+                HashSet<int> activeBitsIndexes = new HashSet<int>();
+                    
+                foreach (int trackingBitIdx in this.trackingBitsIndexes)
+                {
+                    if (inputVector[trackingBitIdx])
+                    {
+                        activeBitsIndexes.Add(trackingBitIdx);
+                    }
+                }
+                
+                if (activeBitsIndexes.Count >= this.clusterCreationThreshold)
+                {
+                    //if the cluster has not been created before or
+                    //has been destroyed because after a certain amount of repetitions 
+                    //the dependency has not been found
+                    if (this.clusterBitsIndexes.Count < this.clusterCreationThreshold)
+                    {
+                        this.clusterBitsIndexes = activeBitsIndexes;
+                    }
+                    else
+                    {
+                        //cut the cluster removing the tracking bits that are not active
+                        this.clusterBitsIndexes.RemoveWhere(i => !activeBitsIndexes.Contains(i));
+                    }
+                }
             }
         }
 
-        /// <summary>
-        /// This callback can be called only if the output bit in the vector is active, 
-        /// see method Check(BitArray inputVector, BitArray outputVector).
-        /// </summary>
-        /// <param name="inputVector">Input vector</param>
-        private void PointActivatedCallback(BitArray inputVector)
+        public void Check(BitArray inputVector)
         {
-            ICluster cluster = new Cluster(inputVector, this.clusterActivationThreshold);
-            this.clusters.Add(cluster);
+            int activeTrackingBitsNumber = 0;
+
+            foreach (int clusterBitIdx in this.clusterBitsIndexes)
+            {
+                if (inputVector[clusterBitIdx])
+                    activeTrackingBitsNumber++;
+
+                if (activeTrackingBitsNumber >= this.clusterActivationThreshold)
+                {
+                    if (this.PointActivated != null)
+                    {
+                        //this.ClusterActivated.BeginInvoke is not supported by 
+                        //.NET Core 2. That is why call handlers using Task.Run
+                        object sender = this;
+                        PointActivatedEventArgs e = new PointActivatedEventArgs(this.outputBitIndex);
+
+                        Delegate[] eventHandlers = this.PointActivated.GetInvocationList();
+
+                        foreach (var eventHandler in eventHandlers)
+                        {
+                            var pointActivatedEventHandler = (PointActivatedEventHandler)eventHandler;
+                            Task.Run(() =>
+                            {
+                                pointActivatedEventHandler(sender, e);
+                            });
+                        }
+                    }
+                    break;
+                }
+            }
         }
+
+        public event PointActivatedEventHandler PointActivated;
 
         #endregion
 
