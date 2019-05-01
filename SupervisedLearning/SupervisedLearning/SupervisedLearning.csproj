@@ -5,4 +5,15 @@
     <TargetFramework>netcoreapp2.0</TargetFramework>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\CombinatorialSpace\CombinatorialSpace.csproj" />
+    <ProjectReference Include="..\Concepts\Concepts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Texts\jack_london_children_of_the_frost.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

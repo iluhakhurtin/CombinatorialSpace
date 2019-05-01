@@ -90,7 +90,7 @@ namespace Concepts_Tests.TextConcepts.English
             // В результате текст один и тот же, но совсем другой набор понятий и, соответственно, 
             // совсем другой описывающий его бинарный код.
 
-            byte contextsCount = 10;
+            byte indexesCount = 10;
             int conceptVectorLength = 256;
             int conceptMaskLength = 8;
             int conceptsFragmentLength = 5;
@@ -102,8 +102,8 @@ namespace Concepts_Tests.TextConcepts.English
             using (FileStream fs0 = new FileStream(fileName, FileMode.Open, FileAccess.Read))
             using (FileStream fs2 = new FileStream(fileName, FileMode.Open, FileAccess.Read))
             {
-                var conceptsFragments0 = conceptsFragmentsStreamReader.GetConceptsFragments(fs0, contextsCount, conceptVectorLength, conceptMaskLength, conceptsFragmentLength);
-                var conceptsFragments2 = conceptsFragmentsStreamReader.GetConceptsFragments(fs2, contextsCount, conceptVectorLength, conceptMaskLength, conceptsFragmentLength, initialContext);
+                var conceptsFragments0 = conceptsFragmentsStreamReader.GetConceptsFragments(fs0, indexesCount, conceptVectorLength, conceptMaskLength, conceptsFragmentLength);
+                var conceptsFragments2 = conceptsFragmentsStreamReader.GetConceptsFragments(fs2, indexesCount, conceptVectorLength, conceptMaskLength, conceptsFragmentLength, initialContext);
                 foreach (var conceptFragment0 in conceptsFragments0)
                 {
                     foreach(var conceptFragment2 in conceptsFragments2)
