@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 
 namespace SupervisedLearning
 {
@@ -6,7 +7,7 @@ namespace SupervisedLearning
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            Console.WriteLine("This application shows learning of a system.");
         }
     }
 }

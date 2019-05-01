@@ -13,12 +13,12 @@ namespace Concepts_Tests.TextConcepts.English
 {
     public class CaseInvariantEnglishCharFragmentsStreamReader_Test: BaseTest
     {
-        IConceptsFragmentsStreamReader<char, byte> conceptsFragmentsStreamReader;
+        IConceptsFragmentsStreamReader<byte, char> conceptsFragmentsStreamReader;
 
         public CaseInvariantEnglishCharFragmentsStreamReader_Test()
         {
             IBinaryVectorBuilder binaryVectorBuilder = new RandomBinaryVectorBuilder();
-            IConceptSystemBuilder<char, byte> conceptSystemBuilder = new CaseInvariantEnglishCharConceptSystemBuilder(binaryVectorBuilder);
+            IConceptSystemBuilder<byte, char> conceptSystemBuilder = new CaseInvariantEnglishCharConceptSystemBuilder(binaryVectorBuilder);
             conceptsFragmentsStreamReader = new CaseInvariantEnglishCharFragmentsStreamReader(conceptSystemBuilder);
         }
 

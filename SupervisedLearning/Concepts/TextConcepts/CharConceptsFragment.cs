@@ -12,11 +12,11 @@ namespace Concepts.TextConcepts
     /// Just find the description about the 'swed' text fragment. This
     /// class represents such a structure.
     /// </summary>
-    public class CharConceptsFragment : IConceptsFragment<char, byte>
+    public class CharConceptsFragment : IConceptsFragment<byte, char>
     {
-        private List<CharContextItem> concepts;
+        private List<CharConceptItem> concepts;
 
-        public IEnumerable<IConceptItem<char, byte>> Concepts
+        public IEnumerable<IConceptItem<byte, char>> Concepts
         {
             get
             {
@@ -43,7 +43,7 @@ namespace Concepts.TextConcepts
 
         public CharConceptsFragment()
         {
-            this.concepts = new List<CharContextItem>();
+            this.concepts = new List<CharConceptItem>();
         }
 
         /// <summary>
@@ -52,12 +52,12 @@ namespace Concepts.TextConcepts
         /// Vector can be used a Bloom Filter.
         /// </summary>
         /// <param name="concept"></param>
-        public void AddConcept(IConceptItem<char, byte> concept)
+        public void AddConcept(IConceptItem<byte, char> concept)
         {
             if (concept == null)
                 throw new ArgumentNullException("concept");
 
-            this.concepts.Add((CharContextItem)concept);
+            this.concepts.Add((CharConceptItem)concept);
 
             if (this.Vector == null)
             {

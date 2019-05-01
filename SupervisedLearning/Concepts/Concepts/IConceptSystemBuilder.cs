@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Concepts.Concepts
 {
-    public interface IConceptSystemBuilder<out TValue, out TContext>
+    public interface IConceptSystemBuilder<out TKey, out TValue>
     {
         /// <summary>
         /// Builds cocept system with the given contexts (contextNumber), 
@@ -12,10 +12,10 @@ namespace Concepts.Concepts
         /// The vector has conceptMaskLength ones (Trues). This mask is the certain concept
         /// binary code.
         /// </summary>
-        /// <param name="contextsCount"></param>
-        /// <param name="vectorLength"></param>
-        /// <param name="conceptMaskLength"></param>
+        /// <param name="positionsCount">Possible positions count for a consept.</param>
+        /// <param name="conceptVectorLength">Vector length for a concept.</param>
+        /// <param name="conceptMaskLength">Number of active bits in concept vector.</param>
         /// <returns></returns>
-        IEnumerable<IConceptItem<TValue, TContext>> Build(int contextsCount, int conceptVectorLength, int conceptMaskLength);
+        IEnumerable<IConceptItem<TKey, TValue>> Build(int positionsCount, int conceptVectorLength, int conceptMaskLength);
     }
 }

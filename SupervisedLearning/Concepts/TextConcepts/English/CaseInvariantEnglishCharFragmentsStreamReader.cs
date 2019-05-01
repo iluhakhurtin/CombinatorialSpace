@@ -9,11 +9,11 @@ using System.Threading.Tasks;
 
 namespace Concepts.TextConcepts.English
 {
-    public class CaseInvariantEnglishCharFragmentsStreamReader : IConceptsFragmentsStreamReader<char, byte>
+    public class CaseInvariantEnglishCharFragmentsStreamReader : IConceptsFragmentsStreamReader<byte, char>
     {
-        private IConceptSystemBuilder<char, byte> conceptSystemBuilder;
+        private IConceptSystemBuilder<byte, char> conceptSystemBuilder;
 
-        public CaseInvariantEnglishCharFragmentsStreamReader(IConceptSystemBuilder<char, byte> conceptSystemBuilder)
+        public CaseInvariantEnglishCharFragmentsStreamReader(IConceptSystemBuilder<byte, char> conceptSystemBuilder)
         {
             this.conceptSystemBuilder = conceptSystemBuilder;
         }
@@ -22,7 +22,7 @@ namespace Concepts.TextConcepts.English
         /// Reads concepts from the given stream.
         /// </summary>
         /// <param name="stream">Input stream, must be readable.</param>
-        /// <param name="contextsCount">Number of possible contexts. 
+        /// <param name="identifiersCount">Number of possible contexts. 
         /// Here <see cref="https://habrahabr.ru/post/326334/"/> the number of concepts is 10.</param>
         /// <param name="conceptVectorLength">Length for a concept vector. In the given article 
         /// the length is 256 bit.</param>
@@ -31,12 +31,12 @@ namespace Concepts.TextConcepts.English
         /// <param name="conceptsFragmentLength">The number of concepts (characters, speaking about text) in
         /// one fragment. Here <see cref="https://habrahabr.ru/post/326334/"/> it pertains to a string length.</param>
         /// <returns></returns>
-        public IEnumerable<IConceptsFragment<char, byte>> GetConceptsFragments(Stream stream, byte contextsCount, int conceptVectorLength, int conceptMaskLength, int conceptsFragmentLength, byte initialContext)
+        public IEnumerable<IConceptsFragment<byte, char>> GetConceptsFragments(Stream stream, byte identifiersCount, int conceptVectorLength, int conceptMaskLength, int conceptsFragmentLength, byte initialIdentifier)
         {
-            if (initialContext > contextsCount)
+            if (initialIdentifier > identifiersCount)
                 throw new Exception("Initial Context cannot be greater than contexts count.");
 
-            var conceptSystem = conceptSystemBuilder.Build(contextsCount, conceptVectorLength, conceptMaskLength);
+            var conceptSystem = conceptSystemBuilder.Build(identifiersCount, conceptVectorLength, conceptMaskLength);
             StreamReader streamReader = new StreamReader(stream);
 
             //buffer is a frame of size N in Alexey Redozubov terminology here:
@@ -60,10 +60,10 @@ namespace Concepts.TextConcepts.English
                         //indexes starts from  0. initialContext is a shift from the initial context index (0)
                         //For example, if initialContext is 2, then the first character is considered to be in the 
                         //2nd context, and all characters positions for the same stream are shifted in 2 positions.
-                        int refinedContextIdx = (contextIdx + initialContext) % (contextsCount - 1);
+                        int refinedContextIdx = (contextIdx + initialIdentifier) % (identifiersCount - 1);
                         //find appropriate concept system for it by the character and symbol position
                         var conceptItem = (from ci in conceptSystem.AsParallel()
-                                          where ci.Context == refinedContextIdx && ci.Value == lowerCaseChar
+                                          where ci.Key == refinedContextIdx && ci.Value == lowerCaseChar
                                           select ci).FirstOrDefault();
 
                         charConceptsFragment.AddConcept(conceptItem);

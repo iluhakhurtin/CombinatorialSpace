@@ -19,7 +19,8 @@ namespace CombinatorialSpace.BinaryVectors
             int clusterCreationThreshold, 
             int clusterActivationThreshold, 
             int trackingInputBinaryVectorLength,
-            int outputBinaryVectorLength)
+            int outputBinaryVectorLength,
+            PointActivatedEventHandler pointActivatedEventHandler)
         {
             for (int i = 0; i < combinatorialSpaceLength; i++)
             {
@@ -27,7 +28,7 @@ namespace CombinatorialSpace.BinaryVectors
                 //there is a loop along the indexes of the vector
                 int outputBitIndex = i % outputBinaryVectorLength;
 
-                IPoint result = new Point(
+                IPoint point = new Point(
                     this.random, 
                     numberOfTrackingBits, 
                     clusterCreationThreshold, 
@@ -35,7 +36,9 @@ namespace CombinatorialSpace.BinaryVectors
                     trackingInputBinaryVectorLength,
                     outputBitIndex);
 
-                yield return result;
+                point.PointActivated += pointActivatedEventHandler;
+
+                yield return point;
             }
         }
     }

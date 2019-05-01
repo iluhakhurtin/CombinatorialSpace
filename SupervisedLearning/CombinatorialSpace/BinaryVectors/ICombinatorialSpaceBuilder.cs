@@ -12,6 +12,7 @@ namespace CombinatorialSpace.BinaryVectors
             int clusterCreationThreshold, 
             int clusterActivationThreshold,
             int trackingBinaryVectorLength,
-            int outputBinaryVectorLength);
+            int outputBinaryVectorLength,
+            PointActivatedEventHandler pointActivatedEventHandler);
     }
 }

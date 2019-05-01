@@ -17,14 +17,14 @@ namespace Concepts.TextConcepts.English
         }
 
 
-        public IEnumerable<IConceptItem<char, byte>> Build(int contextsCount, int conceptVectorLength, int conceptMaskLength)
+        public IEnumerable<IConceptItem<byte, char>> Build(int postionsCount, int conceptVectorLength, int conceptMaskLength)
         {
             for (char c = 'a'; c <= 'z'; c++)
             {
-                for(byte contextIdx = 0; contextIdx < contextsCount; contextIdx++)
+                for(byte position = 0; position < postionsCount; position++)
                 {
                     BitArray vector = this.binaryVectorBuilder.BuildVector(conceptVectorLength, conceptMaskLength);
-                    var conceptItem = new CharContextItem(c, vector, contextIdx);
+                    var conceptItem = new CharConceptItem(c, vector, position);
                     yield return conceptItem;
                 }
             }
