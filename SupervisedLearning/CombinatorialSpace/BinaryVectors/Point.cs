@@ -24,6 +24,13 @@ namespace CombinatorialSpace.BinaryVectors
 
         #endregion
 
+        #region Events
+
+        public event PointActivatedEventHandler PointActivated;
+        public event ClusterCreatedEventHandler ClusterCreated;
+
+        #endregion
+
         #region Constructor
 
         /// <summary>
@@ -118,20 +125,39 @@ namespace CombinatorialSpace.BinaryVectors
                         //cut the cluster removing the tracking bits that are not active
                         this.clusterBitsIndexes.RemoveWhere(i => !activeBitsIndexes.Contains(i));
                     }
+
+                    if (this.ClusterCreated != null)
+                    {
+                        //this.ClusterActivated.BeginInvoke is not supported by 
+                        //.NET Core 2. That is why call handlers using Task.Run
+                        object sender = this;
+                        ClusterCreatedEventArgs e = new ClusterCreatedEventArgs(this.trackingBitsIndexes, this.clusterBitsIndexes);
+
+                        Delegate[] eventHandlers = this.ClusterCreated.GetInvocationList();
+
+                        foreach (var eventHandler in eventHandlers)
+                        {
+                            var clusterCreatedEventHandler = (ClusterCreatedEventHandler)eventHandler;
+                            Task.Run(() =>
+                            {
+                                clusterCreatedEventHandler(sender, e);
+                            });
+                        }
+                    }
                 }
             }
         }
 
         public void Check(BitArray inputVector)
         {
-            int activeTrackingBitsNumber = 0;
+            int activeTrackingBitsCount = 0;
 
             foreach (int clusterBitIdx in this.clusterBitsIndexes)
             {
                 if (inputVector[clusterBitIdx])
-                    activeTrackingBitsNumber++;
+                    activeTrackingBitsCount++;
 
-                if (activeTrackingBitsNumber >= this.clusterActivationThreshold)
+                if (activeTrackingBitsCount >= this.clusterActivationThreshold)
                 {
                     if (this.PointActivated != null)
                     {
@@ -155,8 +181,6 @@ namespace CombinatorialSpace.BinaryVectors
                 }
             }
         }
-
-        public event PointActivatedEventHandler PointActivated;
 
         #endregion
 

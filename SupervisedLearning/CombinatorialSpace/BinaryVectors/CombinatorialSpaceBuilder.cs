@@ -20,7 +20,8 @@ namespace CombinatorialSpace.BinaryVectors
             int clusterActivationThreshold, 
             int trackingInputBinaryVectorLength,
             int outputBinaryVectorLength,
-            PointActivatedEventHandler pointActivatedEventHandler)
+            PointActivatedEventHandler pointActivatedEventHandler,
+            ClusterCreatedEventHandler clusterCreatedEventHandler)
         {
             for (int i = 0; i < combinatorialSpaceLength; i++)
             {
@@ -37,6 +38,7 @@ namespace CombinatorialSpace.BinaryVectors
                     outputBitIndex);
 
                 point.PointActivated += pointActivatedEventHandler;
+                point.ClusterCreated += clusterCreatedEventHandler;
 
                 yield return point;
             }

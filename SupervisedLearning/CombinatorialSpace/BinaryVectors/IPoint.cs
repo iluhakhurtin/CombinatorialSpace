@@ -17,11 +17,21 @@ namespace CombinatorialSpace.BinaryVectors
         /// <param name="inputVector"></param>
         /// <param name="outputVector"></param>
         void Train(BitArray inputVector, BitArray outputVector);
+
+        /// <summary>
+        /// Triggers PointActivated if inputVector has point recognized pattern.
+        /// </summary>
+        /// <param name="inputVector"></param>
         void Check(BitArray inputVector);
 
         /// <summary>
         /// This event triggers if on method Check the point activates.
         /// </summary>
         event PointActivatedEventHandler PointActivated;
+
+        /// <summary>
+        /// This event triggers if a cluster is created
+        /// </summary>
+        event ClusterCreatedEventHandler ClusterCreated;
     }
 }

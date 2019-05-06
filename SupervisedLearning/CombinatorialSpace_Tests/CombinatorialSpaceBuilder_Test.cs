@@ -26,6 +26,7 @@ namespace CombinatorialSpace_Tests
             int trackingBinaryVectorLength = 256;
             int outputBinaryVectorLength = 256;
             PointActivatedEventHandler pointActivatedEventHandler = (sender, args) => { };
+            ClusterCreatedEventHandler clusterCreatedEventHandler = (sender, args) => { };
 
             var combinatorialSpace = this.combinatorialSpaceBuilder.Build(
                 combinatorialSpaceLength, 
@@ -34,7 +35,8 @@ namespace CombinatorialSpace_Tests
                 clusterActivationThreshold, 
                 trackingBinaryVectorLength,
                 outputBinaryVectorLength,
-                pointActivatedEventHandler);
+                pointActivatedEventHandler,
+                clusterCreatedEventHandler);
             var combinatorialSpaceList = combinatorialSpace.ToList();
 
             int actualCount = 0;
