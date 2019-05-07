@@ -33,5 +33,10 @@ namespace CombinatorialSpace.BinaryVectors
         /// This event triggers if a cluster is created
         /// </summary>
         event ClusterCreatedEventHandler ClusterCreated;
+
+        /// <summary>
+        /// This event triggers if a cluster is created
+        /// </summary>
+        event ClusterDestroyedEventHandler ClusterDestroyed;
     }
 }

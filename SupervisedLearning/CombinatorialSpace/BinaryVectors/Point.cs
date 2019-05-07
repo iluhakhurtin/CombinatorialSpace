@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Threading.Tasks;
 
 namespace CombinatorialSpace.BinaryVectors
@@ -28,6 +29,7 @@ namespace CombinatorialSpace.BinaryVectors
 
         public event PointActivatedEventHandler PointActivated;
         public event ClusterCreatedEventHandler ClusterCreated;
+        public event ClusterDestroyedEventHandler ClusterDestroyed;
 
         #endregion
 
@@ -93,7 +95,7 @@ namespace CombinatorialSpace.BinaryVectors
         #endregion
 
         #region Methods
-
+        
         public void Train(BitArray inputVector, BitArray outputVector)
         {
             if (inputVector == null || outputVector == null)
@@ -101,50 +103,87 @@ namespace CombinatorialSpace.BinaryVectors
 
             if (outputVector[this.outputBitIndex])
             {
-                HashSet<int> activeBitsIndexes = new HashSet<int>();
-                    
-                foreach (int trackingBitIdx in this.trackingBitsIndexes)
+                this.CheckAndCreateCluster(inputVector);
+            }
+            else if (this.clusterBitsIndexes.Count > 0)
+            {
+                this.CheckAndDestroyCluster(inputVector);
+            }
+        }
+
+        private void CheckAndDestroyCluster(BitArray inputVector)
+        {
+            //check active cluster bits
+
+            HashSet<int> clusterActiveBitIndexes = new HashSet<int>();
+            foreach (int clusterBitIdx in this.clusterBitsIndexes)
+            {
+                if (inputVector[clusterBitIdx])
                 {
-                    if (inputVector[trackingBitIdx])
-                    {
-                        activeBitsIndexes.Add(trackingBitIdx);
-                    }
+                    clusterActiveBitIndexes.Add(clusterBitIdx);
                 }
-                
-                if (activeBitsIndexes.Count >= this.clusterCreationThreshold)
+            }
+
+            //if the cluster is ready to trigger, but output training vector does not have
+            //active tracking bit this means that cluster does not trigger right
+            if (clusterActiveBitIndexes.Count >= this.clusterActivationThreshold)
+            {
+                this.DestroyCluster();
+            }
+        }
+
+        private void CheckAndCreateCluster(BitArray inputVector)
+        {
+            HashSet<int> trackingActiveBitIndexes = new HashSet<int>();
+
+            foreach (int trackingBitIdx in this.trackingBitsIndexes)
+            {
+                if (inputVector[trackingBitIdx])
                 {
-                    //if the cluster has not been created before or
-                    //has been destroyed because after a certain amount of repetitions 
-                    //the dependency has not been found
-                    if (this.clusterBitsIndexes.Count < this.clusterCreationThreshold)
-                    {
-                        this.clusterBitsIndexes = activeBitsIndexes;
-                    }
-                    else
-                    {
-                        //cut the cluster removing the tracking bits that are not active
-                        this.clusterBitsIndexes.RemoveWhere(i => !activeBitsIndexes.Contains(i));
-                    }
-
-                    if (this.ClusterCreated != null)
-                    {
-                        //this.ClusterActivated.BeginInvoke is not supported by 
-                        //.NET Core 2. That is why call handlers using Task.Run
-                        object sender = this;
-                        ClusterCreatedEventArgs e = new ClusterCreatedEventArgs(this.trackingBitsIndexes, this.clusterBitsIndexes);
-
-                        Delegate[] eventHandlers = this.ClusterCreated.GetInvocationList();
-
-                        foreach (var eventHandler in eventHandlers)
-                        {
-                            var clusterCreatedEventHandler = (ClusterCreatedEventHandler)eventHandler;
-                            Task.Run(() =>
-                            {
-                                clusterCreatedEventHandler(sender, e);
-                            });
-                        }
-                    }
+                    trackingActiveBitIndexes.Add(trackingBitIdx);
                 }
+            }
+
+            if (trackingActiveBitIndexes.Count >= this.clusterCreationThreshold)
+            {
+                if (this.clusterBitsIndexes.Count == 0)
+                    this.CreateCluster(trackingActiveBitIndexes);
+                else
+                    this.AdjustCluster(trackingActiveBitIndexes);
+            }
+        }
+
+        private void CreateCluster(HashSet<int> trackingActiveBitIndexes)
+        {
+            this.clusterBitsIndexes = trackingActiveBitIndexes;
+
+            if (this.ClusterCreated != null)
+            {
+                ClusterCreatedEventArgs e = new ClusterCreatedEventArgs(this.trackingBitsIndexes, this.clusterBitsIndexes);
+                this.ClusterCreated(this, e);
+            }
+        }
+
+        private void AdjustCluster(HashSet<int> trackingActiveBitIndexes)
+        {
+            //cut the cluster removing inactive cluster indexes
+            this.clusterBitsIndexes.RemoveWhere(w => !trackingActiveBitIndexes.Contains(w));
+
+            //if the cluster cannot trigger after the adjustment - destroy it.
+            if (this.clusterBitsIndexes.Count < this.clusterActivationThreshold)
+            {
+                this.DestroyCluster();
+            }
+        }
+
+        private void DestroyCluster()
+        {
+            this.clusterBitsIndexes.Clear();
+
+            if (this.ClusterDestroyed != null)
+            {
+                ClusterDestroyedEventArgs e = new ClusterDestroyedEventArgs();
+                this.ClusterDestroyed(this, e);
             }
         }
 
@@ -161,21 +200,8 @@ namespace CombinatorialSpace.BinaryVectors
                 {
                     if (this.PointActivated != null)
                     {
-                        //this.ClusterActivated.BeginInvoke is not supported by 
-                        //.NET Core 2. That is why call handlers using Task.Run
-                        object sender = this;
                         PointActivatedEventArgs e = new PointActivatedEventArgs(this.outputBitIndex);
-
-                        Delegate[] eventHandlers = this.PointActivated.GetInvocationList();
-
-                        foreach (var eventHandler in eventHandlers)
-                        {
-                            var pointActivatedEventHandler = (PointActivatedEventHandler)eventHandler;
-                            Task.Run(() =>
-                            {
-                                pointActivatedEventHandler(sender, e);
-                            });
-                        }
+                        this.PointActivated(this, e);
                     }
                     break;
                 }

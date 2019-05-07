@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using CombinatorialSpace.BinaryVectors;
 using Concepts.BinaryVectorsBuilders;
@@ -20,8 +21,8 @@ namespace SupervisedLearning
             {
                 Console.WriteLine("Enter a path to a text file in english for training (empty line means using one of the default ones): ");
                 string fileName = Console.ReadLine();
-                try
-                {
+                //try
+                //{
                     if (String.IsNullOrEmpty(fileName))
                         fileName = @".\\Texts\\jack_london_children_of_the_frost.txt";
 
@@ -46,31 +47,37 @@ namespace SupervisedLearning
                         int conceptsFragmentLength = 5; //number of chars read at once
 
                         //combinatorial space initialization
-                        int combinatorialSpaceLength = 60000;
+                        int combinatorialSpaceLength = 600000;
                         int numberOfTrackingBits = 32;
                         int clusterCreationThreshold = 6;
                         int clusterActivationThreshold = 4;
                         int trackingBinaryVectorLength = 256;
                         int outputBinaryVectorLength = 256;
 
-                        BitArray outputVector = null;
+                        BitArray actualOutputVector = null;
 
                         PointActivatedEventHandler pointActivatedEventHandler = (sender, e) =>
                         {
-                            //outputVector.Set(e.OutputBitIndex, true);
-                            Console.Write("{0}, ", e.OutputBitIndex);
+                            actualOutputVector.Set(e.OutputBitIndex, true);
                         };
 
-
-                        var combinatorialSpaceWithClusters = new List<IPoint>();
+                        var combinatorialSpaceWithClusters = new HashSet<IPoint>();
+                        
                         ClusterCreatedEventHandler clusterCreatedEventHandler = (sender, e) =>
                         {
-                            combinatorialSpaceWithClusters.Add(sender as IPoint);
+                            combinatorialSpaceWithClusters.Add((IPoint)sender);
+                            PrintCombinatorialSpaceSize(combinatorialSpaceWithClusters.Count);
+                        };
+
+                        ClusterDestroyedEventHandler clusterDestroyedEventHandler = (sender, e) =>
+                        {
+                            combinatorialSpaceWithClusters.Remove((IPoint)sender);
+                            PrintCombinatorialSpaceSize(combinatorialSpaceWithClusters.Count);
                         };
 
                         ICombinatorialSpaceBuilder combinatorialSpaceBuilder = new CombinatorialSpaceBuilder();
 
-                        var combinatorialSpace = combinatorialSpaceBuilder.Build(
+                        IEnumerable<IPoint> combinatorialSpaceEnumerable = combinatorialSpaceBuilder.Build(
                             combinatorialSpaceLength,
                             numberOfTrackingBits,
                             clusterCreationThreshold,
@@ -78,8 +85,13 @@ namespace SupervisedLearning
                             trackingBinaryVectorLength,
                             outputBinaryVectorLength,
                             pointActivatedEventHandler,
-                            clusterCreatedEventHandler);
-                        
+                            clusterCreatedEventHandler,
+                            clusterDestroyedEventHandler);
+
+                        IList<IPoint> combinatorialSpace = combinatorialSpaceEnumerable.ToList();
+
+                        ResetConsole();
+
                         using (FileStream fs0 = new FileStream(fileName, FileMode.Open, FileAccess.Read))
                         using (FileStream fs1 = new FileStream(fileName, FileMode.Open, FileAccess.Read))
                         {
@@ -89,56 +101,66 @@ namespace SupervisedLearning
 
                             Console.WriteLine("To stop trainin press ESC.\r\n");
 
+                            IEnumerator<IConceptsFragment<byte, char>> conceptsFragments0Enumerator = conceptsFragments0.GetEnumerator();
+                            IEnumerator<IConceptsFragment<byte, char>> conceptsFragments1Enumerator = conceptsFragments1.GetEnumerator();
+
                             int trainStep = 0;
 
-                            bool stopTraining = false;
-
-                            foreach (var conceptFragment0 in conceptsFragments0)
+                            while (conceptsFragments0Enumerator.MoveNext() &&
+                                   conceptsFragments1Enumerator.MoveNext())
                             {
-                                if (stopTraining)
+                                //Training itself
+                                //combinatorialSpace.AsParallel().ForAll(point => point.Train(conceptFragment0.Vector, conceptFragment1.Vector));
+
+                                var trainingInputVector = conceptsFragments0Enumerator.Current.Vector;
+                                var trainingOutputVector = conceptsFragments1Enumerator.Current.Vector;
+
+                                foreach (IPoint point in combinatorialSpace)
                                 {
-                                    break;
+                                    point.Train(trainingInputVector, trainingOutputVector);
                                 }
 
-                                foreach (var conceptFragment1 in conceptsFragments1)
+                                PrintTrainingStep(trainStep++);
+                                PrintCombinatorialSpaceSize(combinatorialSpaceWithClusters.Count);
+
+                                if (Console.KeyAvailable)
                                 {
-                                    //Training itself
-                                    combinatorialSpace.AsParallel().ForAll(point => point.Train(conceptFragment0.Vector, conceptFragment1.Vector));
-
-
-                                    //some operations with console
-                                    Console.SetCursorPosition(0, Console.CursorTop - 1);
-                                    Console.WriteLine("Training step: {0}", trainStep++);
-
-                                    if (Console.KeyAvailable)
+                                    ConsoleKeyInfo key = Console.ReadKey(true);
+                                    if (key.Key == ConsoleKey.Escape)
                                     {
-                                        ConsoleKeyInfo key = Console.ReadKey(true);
-                                        if (key.Key == ConsoleKey.Escape)
-                                        {
-                                            stopTraining = true;
-                                            break;
-                                        }
+                                        break;
                                     }
                                 }
                             }
 
-                            Console.WriteLine("Number of points with clusters: " + combinatorialSpaceWithClusters.Count);
-
+                            //Check
                             fs0.Seek(0, SeekOrigin.Begin);
                             fs1.Seek(0, SeekOrigin.Begin);
 
-                            //Check
                             conceptsFragments0 = conceptsFragmentsStreamReader.GetConceptsFragments(fs0, indexesCount, conceptVectorLength, conceptMaskLength, conceptsFragmentLength, 0);
                             conceptsFragments1 = conceptsFragmentsStreamReader.GetConceptsFragments(fs1, indexesCount, conceptVectorLength, conceptMaskLength, conceptsFragmentLength, 1);
 
-                            foreach (var conceptFragment0 in conceptsFragments0)
+                            conceptsFragments0Enumerator = conceptsFragments0.GetEnumerator();
+                            conceptsFragments1Enumerator = conceptsFragments1.GetEnumerator();
+
+                            while (conceptsFragments0Enumerator.MoveNext() &&
+                                   conceptsFragments1Enumerator.MoveNext())
                             {
-                                foreach (var conceptFragment1 in conceptsFragments1)
+                                var checkInputVector = conceptsFragments0Enumerator.Current.Vector;
+                                var expectedOutputVector = conceptsFragments1Enumerator.Current.Vector;
+
+                                if (checkInputVector == null || expectedOutputVector == null)
+                                    continue;
+
+                                actualOutputVector = new BitArray(expectedOutputVector.Length);
+
+                                foreach (IPoint point in combinatorialSpaceWithClusters)
                                 {
-                                    Console.WriteLine();
-                                    combinatorialSpaceWithClusters.ForEach(point => point.Check(conceptFragment0.Vector));
-                                    Console.WriteLine("\r\n");
+                                    //see callback for point activated - the bit in the actual output vector is set there
+                                    point.Check(checkInputVector);
                                 }
+
+                                PrintVectorsDifference(expectedOutputVector, actualOutputVector);
                             }
                         }
 
@@ -147,11 +169,11 @@ namespace SupervisedLearning
                     {
                         Console.WriteLine("Given file does not exist. Try another one.");
                     }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex);
-                }
+                //}
+                //catch (Exception ex)
+                //{
+                //    Console.WriteLine(ex);
+                //}
 
                 Console.WriteLine("Do you want to continue? y/n");
                 string answer = Console.ReadLine();
@@ -163,6 +185,39 @@ namespace SupervisedLearning
 
                 Console.ReadLine();
             }
+        }
+
+        private static void ResetConsole()
+        {
+            Console.Clear();
+            Console.SetCursorPosition(0, 0);
+        }
+
+        private static void PrintTrainingStep(int stepNumber)
+        {
+            //some operations with console
+            Console.SetCursorPosition(0, 2);
+            Console.WriteLine("Training step: " + stepNumber);
+        }
+
+        private static void PrintCombinatorialSpaceSize(int size)
+        {
+            //some operations with console
+            Console.SetCursorPosition(0, 3);
+            Console.WriteLine("Combinatorial space size: " + size);
+        }
+
+        private static void PrintVectorsDifference(BitArray expectedOutputVector, BitArray actualOutputVector)
+        {
+            BitArray xorResult = expectedOutputVector.Xor(actualOutputVector);
+            int differencesCount = 0;
+            foreach (bool bit in xorResult)
+            {
+                if (bit)
+                    differencesCount++;
+            }
+
+            Console.WriteLine("Number of different bits: " + differencesCount);
         }
     }
 }
