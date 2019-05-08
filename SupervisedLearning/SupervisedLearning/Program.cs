@@ -21,8 +21,8 @@ namespace SupervisedLearning
             {
                 Console.WriteLine("Enter a path to a text file in english for training (empty line means using one of the default ones): ");
                 string fileName = Console.ReadLine();
-                //try
-                //{
+                try
+                {
                     if (String.IsNullOrEmpty(fileName))
                         fileName = @".\\Texts\\jack_london_children_of_the_frost.txt";
 
@@ -39,15 +39,17 @@ namespace SupervisedLearning
 
                         IBinaryVectorBuilder binaryVectorBuilder = new RandomBinaryVectorBuilder();
                         IConceptSystemBuilder<byte, char> conceptSystemBuilder = new CaseInvariantEnglishCharConceptSystemBuilder(binaryVectorBuilder);
-                        IConceptsFragmentsStreamReader<byte, char> conceptsFragmentsStreamReader = new CaseInvariantEnglishCharFragmentsStreamReader(conceptSystemBuilder);
-                        
-                        byte indexesCount = 2; //number of possible concept systems, 2 just to save memory
+
+                        IConceptsFragmentsStreamReader<byte, char> conceptsFragmentsStreamReader1 = new CaseInvariantEnglishCharFragmentsStreamReader(conceptSystemBuilder);
+                        IConceptsFragmentsStreamReader<byte, char> conceptsFragmentsStreamReader2 = new CaseInvariantEnglishCharFragmentsStreamReader(conceptSystemBuilder);
+
+                    byte indexesCount = 2; //number of possible concept systems, 2 just to save memory
                         int conceptVectorLength = 256; //vector size
-                        int conceptMaskLength = 8; //number of true in a vector
+                        int conceptMaskLength = 8; //number of 'true' in a vector
                         int conceptsFragmentLength = 5; //number of chars read at once
 
                         //combinatorial space initialization
-                        int combinatorialSpaceLength = 600000;
+                        int combinatorialSpaceLength = 60000;
                         int numberOfTrackingBits = 32;
                         int clusterCreationThreshold = 6;
                         int clusterActivationThreshold = 4;
@@ -55,6 +57,8 @@ namespace SupervisedLearning
                         int outputBinaryVectorLength = 256;
 
                         BitArray actualOutputVector = null;
+
+                        //callbacks 
 
                         PointActivatedEventHandler pointActivatedEventHandler = (sender, e) =>
                         {
@@ -96,8 +100,8 @@ namespace SupervisedLearning
                         using (FileStream fs1 = new FileStream(fileName, FileMode.Open, FileAccess.Read))
                         {
                             //Train
-                            var conceptsFragments0 = conceptsFragmentsStreamReader.GetConceptsFragments(fs0, indexesCount, conceptVectorLength, conceptMaskLength, conceptsFragmentLength, 0);
-                            var conceptsFragments1 = conceptsFragmentsStreamReader.GetConceptsFragments(fs1, indexesCount, conceptVectorLength, conceptMaskLength, conceptsFragmentLength, 1);
+                            var conceptsFragments0 = conceptsFragmentsStreamReader1.GetConceptsFragments(fs0, indexesCount, conceptVectorLength, conceptMaskLength, conceptsFragmentLength, 0);
+                            var conceptsFragments1 = conceptsFragmentsStreamReader2.GetConceptsFragments(fs1, indexesCount, conceptVectorLength, conceptMaskLength, conceptsFragmentLength, 1);
 
                             Console.WriteLine("To stop trainin press ESC.\r\n");
 
@@ -133,12 +137,12 @@ namespace SupervisedLearning
                                 }
                             }
 
-                            //Check
+                        //Check
                             fs0.Seek(0, SeekOrigin.Begin);
                             fs1.Seek(0, SeekOrigin.Begin);
 
-                            conceptsFragments0 = conceptsFragmentsStreamReader.GetConceptsFragments(fs0, indexesCount, conceptVectorLength, conceptMaskLength, conceptsFragmentLength, 0);
-                            conceptsFragments1 = conceptsFragmentsStreamReader.GetConceptsFragments(fs1, indexesCount, conceptVectorLength, conceptMaskLength, conceptsFragmentLength, 1);
+                        conceptsFragments0 = conceptsFragmentsStreamReader1.GetConceptsFragments(fs0, indexesCount, conceptVectorLength, conceptMaskLength, conceptsFragmentLength, 0);
+                            conceptsFragments1 = conceptsFragmentsStreamReader2.GetConceptsFragments(fs1, indexesCount, conceptVectorLength, conceptMaskLength, conceptsFragmentLength, 1);
 
                             conceptsFragments0Enumerator = conceptsFragments0.GetEnumerator();
                             conceptsFragments1Enumerator = conceptsFragments1.GetEnumerator();
@@ -160,7 +164,8 @@ namespace SupervisedLearning
                                     point.Check(checkInputVector);
                                 }
 
-                                PrintVectorsDifference(expectedOutputVector, actualOutputVector);
+                                //PrintVectorsDifference(expectedOutputVector, actualOutputVector);
+                                PrintVectorsMatch(expectedOutputVector, actualOutputVector);
                             }
                         }
 
@@ -169,11 +174,11 @@ namespace SupervisedLearning
                     {
                         Console.WriteLine("Given file does not exist. Try another one.");
                     }
-                //}
-                //catch (Exception ex)
-                //{
-                //    Console.WriteLine(ex);
-                //}
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex);
+                }
 
                 Console.WriteLine("Do you want to continue? y/n");
                 string answer = Console.ReadLine();
@@ -218,6 +223,28 @@ namespace SupervisedLearning
             }
 
             Console.WriteLine("Number of different bits: " + differencesCount);
+        }
+
+        private static void PrintVectorsMatch(BitArray expectedOutputVector, BitArray actualOutputVector)
+        {
+            BitArray xorResult = expectedOutputVector.And(actualOutputVector);
+            int matchesCount = 0;
+            foreach (bool bit in xorResult)
+            {
+                if (bit)
+                    matchesCount++;
+            }
+
+            int expectedBitsCount = 0;
+            foreach (bool bit in expectedOutputVector)
+            {
+                if (bit)
+                    expectedBitsCount++;
+            }
+
+            float percentage = (((float)matchesCount) / ((float)expectedBitsCount)) * 100;
+
+            Console.WriteLine("Match percentage: {0}%", matchesCount);
         }
     }
 }

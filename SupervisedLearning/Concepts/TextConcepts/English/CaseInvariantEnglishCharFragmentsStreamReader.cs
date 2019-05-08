@@ -12,6 +12,7 @@ namespace Concepts.TextConcepts.English
     public class CaseInvariantEnglishCharFragmentsStreamReader : IConceptsFragmentsStreamReader<byte, char>
     {
         private IConceptSystemBuilder<byte, char> conceptSystemBuilder;
+        private List<IConceptItem<byte, char>> conceptSystem;
 
         public CaseInvariantEnglishCharFragmentsStreamReader(IConceptSystemBuilder<byte, char> conceptSystemBuilder)
         {
@@ -36,7 +37,9 @@ namespace Concepts.TextConcepts.English
             if (initialIdentifier > identifiersCount)
                 throw new Exception("Initial Context cannot be greater than contexts count.");
 
-            var conceptSystem = conceptSystemBuilder.Build(identifiersCount, conceptVectorLength, conceptMaskLength);
+            if(this.conceptSystem == null)
+                this.conceptSystem = conceptSystemBuilder.Build(identifiersCount, conceptVectorLength, conceptMaskLength).ToList();
+
             StreamReader streamReader = new StreamReader(stream);
 
             //buffer is a frame of size N in Alexey Redozubov terminology here:
