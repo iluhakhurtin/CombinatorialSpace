@@ -9,6 +9,6 @@ namespace Concepts.Concepts
 {
     public interface IConceptsFragmentsStreamReader<TKey, TValue> where TKey : struct
     {
-        IEnumerable<IConceptsFragment<TKey, TValue>> GetConceptsFragments(Stream stream, TKey keysCount, int conceptVectorLength, int conceptMaskLength, int conceptsFragmentLength, TKey initialPosition = default(TKey));
+        IEnumerable<IConceptsFragment<TKey, TValue>> GetConceptsFragments(Stream stream, int conceptsFragmentLength, TKey initialKey = default(TKey));
     }
 }

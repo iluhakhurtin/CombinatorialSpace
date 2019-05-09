@@ -6,6 +6,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using Xunit;
 
@@ -13,28 +14,33 @@ namespace Concepts_Tests.TextConcepts.English
 {
     public class CaseInvariantEnglishCharFragmentsStreamReader_Test: BaseTest
     {
-        IConceptsFragmentsStreamReader<byte, char> conceptsFragmentsStreamReader;
+        private const int conceptsFragmentLength = 5; //number of characters read at once
+        private const string testFileName = @"TextConcepts\English\jack_london_children_of_the_frost.txt";
+
+        private readonly CaseInvariantEnglishCharFragmentsStreamReader conceptsFragmentsStreamReader;
 
         public CaseInvariantEnglishCharFragmentsStreamReader_Test()
         {
             IBinaryVectorBuilder binaryVectorBuilder = new RandomBinaryVectorBuilder();
             IConceptSystemBuilder<byte, char> conceptSystemBuilder = new CaseInvariantEnglishCharConceptSystemBuilder(binaryVectorBuilder);
-            conceptsFragmentsStreamReader = new CaseInvariantEnglishCharFragmentsStreamReader(conceptSystemBuilder);
+
+            byte contextsCount = 10;
+            int conceptVectorLength = 256;
+            int conceptMaskLength = 8;
+
+            IEnumerable<IConceptItem<byte, char>> conceptSystem = conceptSystemBuilder.Build(contextsCount, conceptVectorLength, conceptMaskLength);
+
+            this.conceptsFragmentsStreamReader = new CaseInvariantEnglishCharFragmentsStreamReader(conceptSystem, contextsCount);
         }
 
         [Fact]
         public void Can_read_fragments_from_a_stream()
         {
-            byte contextsCount = 10;
-            int conceptVectorLength = 256;
-            int conceptMaskLength = 8;
-            int conceptsFragmentLength = 5;
-
             string fileName = this.GetTestFileName();
 
-            using(FileStream fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
+            using (FileStream fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
             {
-                var conceptsFragments = conceptsFragmentsStreamReader.GetConceptsFragments(fs, contextsCount, conceptVectorLength, conceptMaskLength, conceptsFragmentLength);
+                var conceptsFragments = conceptsFragmentsStreamReader.GetConceptsFragments(fs, conceptsFragmentLength);
                 foreach (var conceptFragment in conceptsFragments)
                 {
                     Assert.NotNull(conceptFragment);
@@ -45,24 +51,32 @@ namespace Concepts_Tests.TextConcepts.English
         [Fact]
         public void Fragments_are_the_same_for_the_same_text_file_with_the_same_initial_contexts()
         {
-            byte contextsCount = 10;
-            int conceptVectorLength = 256;
-            int conceptMaskLength = 8;
-            int conceptsFragmentLength = 5;
-
             string fileName = this.GetTestFileName();
 
             using (FileStream fs0 = new FileStream(fileName, FileMode.Open, FileAccess.Read))
             using (FileStream fs1 = new FileStream(fileName, FileMode.Open, FileAccess.Read))
             {
-                var conceptsFragments0 = conceptsFragmentsStreamReader.GetConceptsFragments(fs0, contextsCount, conceptVectorLength, conceptMaskLength, conceptsFragmentLength);
-                var conceptsFragments1 = conceptsFragmentsStreamReader.GetConceptsFragments(fs1, contextsCount, conceptVectorLength, conceptMaskLength, conceptsFragmentLength);
-                foreach (var conceptFragment0 in conceptsFragments0)
+                var conceptsFragments0 = conceptsFragmentsStreamReader.GetConceptsFragments(fs0, conceptsFragmentLength);
+                var conceptsFragments1 = conceptsFragmentsStreamReader.GetConceptsFragments(fs1, conceptsFragmentLength);
+
+                var conceptsFragments0Enumerator = conceptsFragments0.GetEnumerator();
+                var conceptsFragments1Enumerator = conceptsFragments1.GetEnumerator();
+
+                while (conceptsFragments0Enumerator.MoveNext() 
+                       && conceptsFragments1Enumerator.MoveNext())
                 {
-                    foreach (var conceptFragment1 in conceptsFragments1)
+                    var conceptFragment0 = conceptsFragments0Enumerator.Current;
+                    var conceptFragment1 = conceptsFragments1Enumerator.Current;
+
+                    if (conceptFragment0.Vector == null || conceptFragment1.Vector == null)
                     {
-                        Assert.NotEqual<BitArray>(conceptFragment0.Vector, conceptFragment1.Vector);
+                        Assert.Equal(0, conceptFragment0.ConceptsCount);
+                        Assert.Equal(0, conceptFragment1.ConceptsCount);
+                        Assert.Null(conceptFragment0.Vector);
+                        Assert.Null(conceptFragment1.Vector);
                     }
+                    else
+                        Assert.Equal<BitArray>(conceptFragment0.Vector, conceptFragment1.Vector);
                 }
             }
         }
@@ -89,34 +103,42 @@ namespace Concepts_Tests.TextConcepts.English
             // { s9,w1,e2,d4}
             // В результате текст один и тот же, но совсем другой набор понятий и, соответственно, 
             // совсем другой описывающий его бинарный код.
-
-            byte indexesCount = 10;
-            int conceptVectorLength = 256;
-            int conceptMaskLength = 8;
-            int conceptsFragmentLength = 5;
-
-            byte initialContext = 2;
+            
+            byte initialKey = 2;
 
             string fileName = this.GetTestFileName();
 
             using (FileStream fs0 = new FileStream(fileName, FileMode.Open, FileAccess.Read))
             using (FileStream fs2 = new FileStream(fileName, FileMode.Open, FileAccess.Read))
             {
-                var conceptsFragments0 = conceptsFragmentsStreamReader.GetConceptsFragments(fs0, indexesCount, conceptVectorLength, conceptMaskLength, conceptsFragmentLength);
-                var conceptsFragments2 = conceptsFragmentsStreamReader.GetConceptsFragments(fs2, indexesCount, conceptVectorLength, conceptMaskLength, conceptsFragmentLength, initialContext);
-                foreach (var conceptFragment0 in conceptsFragments0)
+                var conceptsFragments0 = conceptsFragmentsStreamReader.GetConceptsFragments(fs0, conceptsFragmentLength);
+                var conceptsFragments2 = conceptsFragmentsStreamReader.GetConceptsFragments(fs2, conceptsFragmentLength, initialKey);
+
+                var conceptsFragments0Enumerator = conceptsFragments0.GetEnumerator();
+                var conceptsFragments2Enumerator = conceptsFragments2.GetEnumerator();
+
+                while (conceptsFragments0Enumerator.MoveNext()
+                       && conceptsFragments2Enumerator.MoveNext())
                 {
-                    foreach(var conceptFragment2 in conceptsFragments2)
+                    var conceptFragment0 = conceptsFragments0Enumerator.Current;
+                    var conceptFragment2 = conceptsFragments2Enumerator.Current;
+
+                    if (conceptFragment0.Vector == null || conceptFragment2.Vector == null)
                     {
-                        Assert.NotEqual<BitArray>(conceptFragment0.Vector, conceptFragment2.Vector);
+                        Assert.Equal(0, conceptFragment0.ConceptsCount);
+                        Assert.Equal(0, conceptFragment2.ConceptsCount);
+                        Assert.Null(conceptFragment0.Vector);
+                        Assert.Null(conceptFragment2.Vector);
                     }
+                    else
+                        Assert.NotEqual<BitArray>(conceptFragment0.Vector, conceptFragment2.Vector);
                 }
             }
         }
 
         private string GetTestFileName()
         {
-            return @"TextConcepts\English\jack_london_children_of_the_frost.txt";
+            return testFileName;
         }
     }
 }

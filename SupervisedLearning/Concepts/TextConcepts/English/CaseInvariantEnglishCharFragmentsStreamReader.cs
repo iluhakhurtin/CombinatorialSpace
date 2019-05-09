@@ -9,36 +9,51 @@ using System.Threading.Tasks;
 
 namespace Concepts.TextConcepts.English
 {
+    /// <summary>
+    /// Reads an english text splitting it by fragments of given size and returns 
+    /// a concept fragment - the representation of the merged concepts (from the 
+    /// concept system) in the fragment. 
+    /// </summary>
     public class CaseInvariantEnglishCharFragmentsStreamReader : IConceptsFragmentsStreamReader<byte, char>
     {
-        private IConceptSystemBuilder<byte, char> conceptSystemBuilder;
-        private List<IConceptItem<byte, char>> conceptSystem;
+        private byte keysCount;
+        private IList<IConceptItem<byte, char>> conceptSystem;
 
-        public CaseInvariantEnglishCharFragmentsStreamReader(IConceptSystemBuilder<byte, char> conceptSystemBuilder)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="conceptSystem"></param>
+        /// <param name="keysCount">Usually equals to the number of possible contexts (keys) that are in the concept system.</param>
+        public CaseInvariantEnglishCharFragmentsStreamReader(IEnumerable<IConceptItem<byte, char>> conceptSystem, byte keysCount)
         {
-            this.conceptSystemBuilder = conceptSystemBuilder;
+            if(conceptSystem == null)
+                throw new ArgumentNullException("conceptSystem");
+
+            this.conceptSystem = conceptSystem as IList<IConceptItem<byte, char>>;
+            if (this.conceptSystem == null)
+                this.conceptSystem = conceptSystem.ToList();
+
+            this.keysCount = keysCount;
         }
 
         /// <summary>
         /// Reads concepts from the given stream.
         /// </summary>
         /// <param name="stream">Input stream, must be readable.</param>
-        /// <param name="identifiersCount">Number of possible contexts. 
-        /// Here <see cref="https://habrahabr.ru/post/326334/"/> the number of concepts is 10.</param>
-        /// <param name="conceptVectorLength">Length for a concept vector. In the given article 
-        /// the length is 256 bit.</param>
-        /// <param name="conceptMaskLength">In <see cref="https://habrahabr.ru/post/326334/"/> it is 8 bits. 
-        /// In other words this is the number of trues in the concept vector.</param>
+        /// <param name="keysCount">Number of possible shifts. 
+        /// Here <see cref="https://habrahabr.ru/post/326334/"/> the number of shifts is K and equals to 10.</param>
+        /// <param name="initialKey">Means starting key (position). Think a key for a text is a starting position 
+        /// from 0 to 9. So, initial key means that is starts from it, not from 0 (for example, from 2 instead of 0).</param>
         /// <param name="conceptsFragmentLength">The number of concepts (characters, speaking about text) in
         /// one fragment. Here <see cref="https://habrahabr.ru/post/326334/"/> it pertains to a string length.</param>
         /// <returns></returns>
-        public IEnumerable<IConceptsFragment<byte, char>> GetConceptsFragments(Stream stream, byte identifiersCount, int conceptVectorLength, int conceptMaskLength, int conceptsFragmentLength, byte initialIdentifier)
+        public IEnumerable<IConceptsFragment<byte, char>> GetConceptsFragments(Stream stream, int conceptsFragmentLength, byte initialKey = default(byte))
         {
-            if (initialIdentifier > identifiersCount)
-                throw new Exception("Initial Context cannot be greater than contexts count.");
+            if (initialKey > keysCount)
+                throw new Exception("Initial initialKey (position of a frame) cannot be greater than the number of keys.");
 
             if(this.conceptSystem == null)
-                this.conceptSystem = conceptSystemBuilder.Build(identifiersCount, conceptVectorLength, conceptMaskLength).ToList();
+                throw new NullReferenceException("conceptSystem");
 
             StreamReader streamReader = new StreamReader(stream);
 
@@ -46,7 +61,7 @@ namespace Concepts.TextConcepts.English
             //https://habrahabr.ru/post/326334/
             char[] buffer = new char[conceptsFragmentLength];
 
-            byte contextIdx = 0;
+            byte keyIdx = 0;
             while(!streamReader.EndOfStream)
             {
                 int readCharsNumber = streamReader.Read(buffer, 0, buffer.Length);
@@ -59,17 +74,18 @@ namespace Concepts.TextConcepts.English
                     if(Char.IsLetter(symbol))
                     {
                         char lowerCaseChar = Char.ToLower(symbol);
-                        //this is a cyclic identifier. its maximum value is contextsCount - 1 because 
-                        //indexes starts from  0. initialContext is a shift from the initial context index (0)
-                        //For example, if initialContext is 2, then the first character is considered to be in the 
-                        //2nd context, and all characters positions for the same stream are shifted in 2 positions.
-                        int refinedContextIdx = (contextIdx + initialIdentifier) % (identifiersCount - 1);
+                        // this is a cyclic identifier. its maximum value is keysCount - 1 because 
+                        // indexes start from  0. initialKey is a shift from the initial key index (0)
+                        // For example, if initialContext is 2, then the first character is considered to be in the 
+                        // 2nd context, and all characters positions for the same stream are shifted in 2 positions.
+                        int refinedContextIdx = (keyIdx + initialKey) % (this.keysCount - 1);
                         //find appropriate concept system for it by the character and symbol position
                         var conceptItem = (from ci in conceptSystem.AsParallel()
                                           where ci.Key == refinedContextIdx && ci.Value == lowerCaseChar
                                           select ci).FirstOrDefault();
 
-                        charConceptsFragment.AddConcept(conceptItem);
+                        if(conceptItem != null)
+                            charConceptsFragment.AddConcept(conceptItem);
                     }
                 }
 

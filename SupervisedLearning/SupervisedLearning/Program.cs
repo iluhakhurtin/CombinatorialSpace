@@ -37,13 +37,7 @@ namespace SupervisedLearning
                         // using the combinatorial space.
                         //6. Compare expected vector from (2) and the built one.
 
-                        IBinaryVectorBuilder binaryVectorBuilder = new RandomBinaryVectorBuilder();
-                        IConceptSystemBuilder<byte, char> conceptSystemBuilder = new CaseInvariantEnglishCharConceptSystemBuilder(binaryVectorBuilder);
-
-                        IConceptsFragmentsStreamReader<byte, char> conceptsFragmentsStreamReader1 = new CaseInvariantEnglishCharFragmentsStreamReader(conceptSystemBuilder);
-                        IConceptsFragmentsStreamReader<byte, char> conceptsFragmentsStreamReader2 = new CaseInvariantEnglishCharFragmentsStreamReader(conceptSystemBuilder);
-
-                    byte indexesCount = 2; //number of possible concept systems, 2 just to save memory
+                        byte indexesCount = 2; //number of possible concept systems, 2 just to save memory
                         int conceptVectorLength = 256; //vector size
                         int conceptMaskLength = 8; //number of 'true' in a vector
                         int conceptsFragmentLength = 5; //number of chars read at once
@@ -56,6 +50,15 @@ namespace SupervisedLearning
                         int trackingBinaryVectorLength = 256;
                         int outputBinaryVectorLength = 256;
 
+                        IBinaryVectorBuilder binaryVectorBuilder = new RandomBinaryVectorBuilder();
+                        IConceptSystemBuilder<byte, char> conceptSystemBuilder = new CaseInvariantEnglishCharConceptSystemBuilder(binaryVectorBuilder);
+                        var conceptSystemEnumerable = 
+                            conceptSystemBuilder.Build(indexesCount, conceptVectorLength, conceptMaskLength);
+                        var conceptSystem = conceptSystemEnumerable.ToList();
+
+                        IConceptsFragmentsStreamReader<byte, char> conceptsFragmentsStreamReader0 = new CaseInvariantEnglishCharFragmentsStreamReader(conceptSystem, indexesCount);
+                        IConceptsFragmentsStreamReader<byte, char> conceptsFragmentsStreamReader1 = new CaseInvariantEnglishCharFragmentsStreamReader(conceptSystem, indexesCount);
+                        
                         BitArray actualOutputVector = null;
 
                         //callbacks 
@@ -100,8 +103,8 @@ namespace SupervisedLearning
                         using (FileStream fs1 = new FileStream(fileName, FileMode.Open, FileAccess.Read))
                         {
                             //Train
-                            var conceptsFragments0 = conceptsFragmentsStreamReader1.GetConceptsFragments(fs0, indexesCount, conceptVectorLength, conceptMaskLength, conceptsFragmentLength, 0);
-                            var conceptsFragments1 = conceptsFragmentsStreamReader2.GetConceptsFragments(fs1, indexesCount, conceptVectorLength, conceptMaskLength, conceptsFragmentLength, 1);
+                            var conceptsFragments0 = conceptsFragmentsStreamReader0.GetConceptsFragments(fs0, 0);
+                            var conceptsFragments1 = conceptsFragmentsStreamReader1.GetConceptsFragments(fs1, 1);
 
                             Console.WriteLine("To stop trainin press ESC.\r\n");
 
@@ -137,12 +140,12 @@ namespace SupervisedLearning
                                 }
                             }
 
-                        //Check
-                            fs0.Seek(0, SeekOrigin.Begin);
-                            fs1.Seek(0, SeekOrigin.Begin);
+                            //Check
+                            //fs0.Seek(0, SeekOrigin.Begin);
+                            //fs1.Seek(0, SeekOrigin.Begin);
 
-                        conceptsFragments0 = conceptsFragmentsStreamReader1.GetConceptsFragments(fs0, indexesCount, conceptVectorLength, conceptMaskLength, conceptsFragmentLength, 0);
-                            conceptsFragments1 = conceptsFragmentsStreamReader2.GetConceptsFragments(fs1, indexesCount, conceptVectorLength, conceptMaskLength, conceptsFragmentLength, 1);
+                            conceptsFragments0 = conceptsFragmentsStreamReader0.GetConceptsFragments(fs0, 0);
+                            conceptsFragments1 = conceptsFragmentsStreamReader1.GetConceptsFragments(fs1, 1);
 
                             conceptsFragments0Enumerator = conceptsFragments0.GetEnumerator();
                             conceptsFragments1Enumerator = conceptsFragments1.GetEnumerator();
@@ -244,7 +247,7 @@ namespace SupervisedLearning
 
             float percentage = (((float)matchesCount) / ((float)expectedBitsCount)) * 100;
 
-            Console.WriteLine("Match percentage: {0}%", matchesCount);
+            Console.WriteLine("Match percentage: {0}%", percentage);
         }
     }
 }
