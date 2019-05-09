@@ -20,14 +20,18 @@ namespace SupervisedLearning
             while (true)
             {
                 Console.WriteLine("Enter a path to a text file in english for training (empty line means using one of the default ones): ");
-                string fileName = Console.ReadLine();
+                string trainFileName = Console.ReadLine();
+                if (String.IsNullOrEmpty(trainFileName))
+                    trainFileName = @".\\Texts\\jack_london_children_of_the_frost.txt";
+
+                Console.WriteLine("Enter a path to a text file in english for checking (empty line means using one of the default ones): ");
+                string checkFileName = Console.ReadLine();
+                if (String.IsNullOrEmpty(checkFileName))
+                    checkFileName = @".\\Texts\\isaac_asimov_foundation_1.txt";
+
                 try
                 {
-                    if (String.IsNullOrEmpty(fileName))
-                        fileName = @".\\Texts\\jack_london_children_of_the_frost.txt";
-
-
-                    if (File.Exists(fileName))
+                    if (File.Exists(trainFileName) && File.Exists(checkFileName))
                     {
                         //1. Build one char consept system based on zero start index
                         //2. Build another char consept system based on third start index
@@ -99,17 +103,21 @@ namespace SupervisedLearning
 
                         ResetConsole();
 
-                        using (FileStream fs0 = new FileStream(fileName, FileMode.Open, FileAccess.Read))
-                        using (FileStream fs1 = new FileStream(fileName, FileMode.Open, FileAccess.Read))
+                        //training
+                        using (FileStream fs0 = new FileStream(trainFileName, FileMode.Open, FileAccess.Read))
+                        using (FileStream fs1 = new FileStream(trainFileName, FileMode.Open, FileAccess.Read))
                         {
-                            //Train
-                            var conceptsFragments0 = conceptsFragmentsStreamReader0.GetConceptsFragments(fs0, 0);
-                            var conceptsFragments1 = conceptsFragmentsStreamReader1.GetConceptsFragments(fs1, 1);
+                            var conceptsFragments0 =
+                                conceptsFragmentsStreamReader0.GetConceptsFragments(fs0, conceptsFragmentLength, 0);
+                            var conceptsFragments1 =
+                                conceptsFragmentsStreamReader1.GetConceptsFragments(fs1, conceptsFragmentLength, 1);
 
                             Console.WriteLine("To stop trainin press ESC.\r\n");
 
-                            IEnumerator<IConceptsFragment<byte, char>> conceptsFragments0Enumerator = conceptsFragments0.GetEnumerator();
-                            IEnumerator<IConceptsFragment<byte, char>> conceptsFragments1Enumerator = conceptsFragments1.GetEnumerator();
+                            IEnumerator<IConceptsFragment<byte, char>> conceptsFragments0Enumerator =
+                                conceptsFragments0.GetEnumerator();
+                            IEnumerator<IConceptsFragment<byte, char>> conceptsFragments1Enumerator =
+                                conceptsFragments1.GetEnumerator();
 
                             int trainStep = 0;
 
@@ -139,16 +147,17 @@ namespace SupervisedLearning
                                     }
                                 }
                             }
+                        }
 
-                            //Check
-                            //fs0.Seek(0, SeekOrigin.Begin);
-                            //fs1.Seek(0, SeekOrigin.Begin);
+                        //Check
+                        using (FileStream fs0 = new FileStream(checkFileName, FileMode.Open, FileAccess.Read))
+                        using (FileStream fs1 = new FileStream(checkFileName, FileMode.Open, FileAccess.Read))
+                        {
+                            var conceptsFragments0 = conceptsFragmentsStreamReader0.GetConceptsFragments(fs0, conceptsFragmentLength, 0);
+                            var conceptsFragments1 = conceptsFragmentsStreamReader1.GetConceptsFragments(fs1, conceptsFragmentLength, 1);
 
-                            conceptsFragments0 = conceptsFragmentsStreamReader0.GetConceptsFragments(fs0, 0);
-                            conceptsFragments1 = conceptsFragmentsStreamReader1.GetConceptsFragments(fs1, 1);
-
-                            conceptsFragments0Enumerator = conceptsFragments0.GetEnumerator();
-                            conceptsFragments1Enumerator = conceptsFragments1.GetEnumerator();
+                            var conceptsFragments0Enumerator = conceptsFragments0.GetEnumerator();
+                            var conceptsFragments1Enumerator = conceptsFragments1.GetEnumerator();
 
                             while (conceptsFragments0Enumerator.MoveNext() &&
                                    conceptsFragments1Enumerator.MoveNext())
