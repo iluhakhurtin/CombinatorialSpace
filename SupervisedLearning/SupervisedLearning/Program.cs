@@ -41,7 +41,7 @@ namespace SupervisedLearning
                         // using the combinatorial space.
                         //6. Compare expected vector from (2) and the built one.
 
-                        byte indexesCount = 2; //number of possible concept systems, 2 just to save memory
+                        byte indexesCount = 10; //number of possible concept systems, 2 just to save memory
                         int conceptVectorLength = 256; //vector size
                         int conceptMaskLength = 8; //number of 'true' in a vector
                         int conceptsFragmentLength = 5; //number of chars read at once
@@ -182,7 +182,9 @@ namespace SupervisedLearning
                                 checkStep++;
 
                                 PrintCheckingStep(checkStep);
-                                //print metrics
+
+                                //Print metrics. To make it easier to read - pring only every 50th step. Otherwise
+                                //the data is updated to quick and it is hard to catch it by an eye.
                                 if (checkStep % 50 == 0)
                                 {
                                     float precision = CalculatePrecision(actualOutputVector, expectedOutputVector);
