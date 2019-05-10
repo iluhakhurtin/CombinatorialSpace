@@ -159,6 +159,8 @@ namespace SupervisedLearning
                             var conceptsFragments0Enumerator = conceptsFragments0.GetEnumerator();
                             var conceptsFragments1Enumerator = conceptsFragments1.GetEnumerator();
 
+                            int checkStep = 0;
+
                             while (conceptsFragments0Enumerator.MoveNext() &&
                                    conceptsFragments1Enumerator.MoveNext())
                             {
@@ -176,8 +178,19 @@ namespace SupervisedLearning
                                     point.Check(checkInputVector);
                                 }
 
-                                //PrintVectorsDifference(expectedOutputVector, actualOutputVector);
-                                PrintVectorsMatch(expectedOutputVector, actualOutputVector);
+                                checkStep++;
+
+                                PrintCheckingStep(checkStep);
+                                //print metrics
+                                if (checkStep % 50 == 0)
+                                {
+                                    float precision = CalculatePrecision(actualOutputVector, expectedOutputVector);
+                                    PrintPrecision(precision);
+                                    float recall = CalculateRecall(actualOutputVector, expectedOutputVector);
+                                    PrintRecall(recall);
+                                    float f1 = CalculateF1(precision, recall);
+                                    PrintF1(f1);
+                                }
                             }
                         }
 
@@ -213,50 +226,117 @@ namespace SupervisedLearning
         private static void PrintTrainingStep(int stepNumber)
         {
             //some operations with console
-            Console.SetCursorPosition(0, 2);
+            int cursorLine = 2;
+            Console.SetCursorPosition(0, cursorLine);
             Console.WriteLine("Training step: " + stepNumber);
         }
 
         private static void PrintCombinatorialSpaceSize(int size)
         {
             //some operations with console
-            Console.SetCursorPosition(0, 3);
-            Console.WriteLine("Combinatorial space size: " + size);
+            int cursorLine = 3;
+            Console.SetCursorPosition(0, cursorLine);
+            string message = "Combinatorial space size: " + size;
+            string restOfLine = new string(' ', Console.WindowWidth - message.Length);
+            Console.WriteLine(message + restOfLine);
         }
 
-        private static void PrintVectorsDifference(BitArray expectedOutputVector, BitArray actualOutputVector)
+        private static void PrintCheckingStep(int stepNumber)
         {
-            BitArray xorResult = expectedOutputVector.Xor(actualOutputVector);
-            int differencesCount = 0;
-            foreach (bool bit in xorResult)
-            {
-                if (bit)
-                    differencesCount++;
-            }
-
-            Console.WriteLine("Number of different bits: " + differencesCount);
+            //some operations with console
+            int cursorLine = 4;
+            Console.SetCursorPosition(0, cursorLine);
+            Console.WriteLine("Checking step: " + stepNumber);
         }
 
-        private static void PrintVectorsMatch(BitArray expectedOutputVector, BitArray actualOutputVector)
+        private static float CalculatePrecision(BitArray actual, BitArray expected)
         {
-            BitArray xorResult = expectedOutputVector.And(actualOutputVector);
-            int matchesCount = 0;
-            foreach (bool bit in xorResult)
+            if(expected == null)
+                throw new ArgumentNullException("expected");
+
+            if (actual == null)
+                throw new ArgumentNullException("actual");
+
+            if(actual.Length != expected.Length)
+                throw  new ArgumentException("Length of expected and actual array must be the same.");
+
+            int falsePositivesCount = 0;
+            int truePositivesCount = 0;
+
+            for (int i = 0; i < expected.Length; i++)
             {
-                if (bit)
-                    matchesCount++;
+                if (actual[i] && expected[i])
+                {
+                    truePositivesCount++;
+                }
+                else if (actual[i] && !expected[i])
+                {
+                    falsePositivesCount++;
+                }
             }
 
-            int expectedBitsCount = 0;
-            foreach (bool bit in expectedOutputVector)
+            float result = (float) truePositivesCount / (truePositivesCount + falsePositivesCount);
+
+            return result;
+        }
+
+        private static void PrintPrecision(float precision)
+        {
+            int cursorLine = 5;
+            Console.SetCursorPosition(0, cursorLine);
+            Console.WriteLine("Precision: {0:P2}", precision);
+        }
+
+
+        private static float CalculateRecall(BitArray actual, BitArray expected)
+        {
+            if (expected == null)
+                throw new ArgumentNullException("expected");
+
+            if (actual == null)
+                throw new ArgumentNullException("actual");
+
+            if (actual.Length != expected.Length)
+                throw new ArgumentException("Length of expected and actual array must be the same.");
+
+            int falseNegativesAndTruePositivesCount = 0;
+            int truePositivesCount = 0;
+
+            for (int i = 0; i < expected.Length; i++)
             {
-                if (bit)
-                    expectedBitsCount++;
+                if (expected[i])
+                {
+                    falseNegativesAndTruePositivesCount++;
+                    if (actual[i])
+                    {
+                        truePositivesCount++;
+                    }
+                }
             }
 
-            float percentage = (((float)matchesCount) / ((float)expectedBitsCount)) * 100;
+            float result = (float)truePositivesCount / falseNegativesAndTruePositivesCount;
 
-            Console.WriteLine("Match percentage: {0}%", percentage);
+            return result;
+        }
+
+        private static void PrintRecall(float recall)
+        {
+            int cursorLine = 6;
+            Console.SetCursorPosition(0, cursorLine);
+            Console.WriteLine("Recall: {0:P2}", recall);
+        }
+
+        private static float CalculateF1(float precision, float recall)
+        {
+            float result = 2 * precision * recall / (precision + recall);
+            return result;
+        }
+
+        private static void PrintF1(float f1)
+        {
+            int cursorLine = 7;
+            Console.SetCursorPosition(0, cursorLine);
+            Console.WriteLine("F1: {0:P2}", f1);
         }
     }
 }
