@@ -138,6 +138,7 @@ namespace SupervisedLearning
                                 PrintTrainingStep(trainStep++);
                                 PrintCombinatorialSpaceSize(combinatorialSpaceWithClusters.Count);
 
+                                //stop checking by esc pressing
                                 if (Console.KeyAvailable)
                                 {
                                     ConsoleKeyInfo key = Console.ReadKey(true);
@@ -190,6 +191,16 @@ namespace SupervisedLearning
                                     PrintRecall(recall);
                                     float f1 = CalculateF1(precision, recall);
                                     PrintF1(f1);
+                                }
+
+                                //stop checking by esc pressing
+                                if (Console.KeyAvailable)
+                                {
+                                    ConsoleKeyInfo key = Console.ReadKey(true);
+                                    if (key.Key == ConsoleKey.Escape)
+                                    {
+                                        break;
+                                    }
                                 }
                             }
                         }
