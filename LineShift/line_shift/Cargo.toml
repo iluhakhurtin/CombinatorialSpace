@@ -6,6 +6,5 @@ edition = "2018"
 
 [dependencies]
 bigint = "4.4.1"
-bit-vec = "0.6.1"
 # image = "0.22.3"
 # imageproc = "0.19.2"
