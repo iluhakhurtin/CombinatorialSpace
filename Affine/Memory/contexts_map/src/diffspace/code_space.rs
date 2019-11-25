@@ -34,6 +34,7 @@ fn generate_code_space() -> CodeSpace {
 	//In other words, this logic creates a 3d codes space every code in which has up to 27 bits changing smoothly
 	//in relation to the coordinates of this space. One of the axis in the space (a) is looped and can have values
 	//from 0 to 9.
+	//More than 750 codes in the code space contains from 15 to 18 set bits after such initialization.
 
 	let code_space = CodeSpace::from_shape_fn((MAX_A, MAX_Y, MAX_X), |(a, y, x)| {
 		let (a, y, x) = (a as isize, 1 + y as isize, 1 + x as isize);
@@ -77,12 +78,6 @@ mod tests {
 	#[test]
 	fn test_generate_code_space() {
 		let code_space = generate_code_space();
-
-		let ones_counts = vec![27];
-		for code in code_space.into_iter() {
-			println!("{}", code.value().count_ones());
-			//assert!(code.value().count_ones() > 20);
-		}
 
 		assert!(
 			dbg!(correlation(
