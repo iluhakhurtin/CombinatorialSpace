@@ -3,7 +3,7 @@ use ndarray::{s, Array3};
 use rand::Rng;
 
 // (φ, y, x) -> u128
-type CodeSpace = Array3<BitVector>;
+pub type CodeSpace = Array3<BitVector>;
 
 /// Creates a 3 dimentional array 10x10x10 of 128 bits vectors.
 /// Every vector can have up to 27 randomly set bits.
@@ -11,7 +11,7 @@ type CodeSpace = Array3<BitVector>;
 /// are changed smoothly if the coordinates are chnaged smoothly as well.
 /// In other words there is a high correlation between the codes next to each other.
 /// Also the space is closed up (looped) in the first dimention.
-fn generate_code_space() -> CodeSpace {
+pub fn generate_code_space() -> CodeSpace {
 	const MAX_A: usize = 10;
 	const MAX_X: usize = MAX_A;
 	const MAX_Y: usize = MAX_A;
