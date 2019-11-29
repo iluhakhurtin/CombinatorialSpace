@@ -9,14 +9,14 @@ use ndarray::Array2;
 
 pub fn learn(contexts: &mut ContextMap, code: &BitVector) {
 	//get covariances for the contexts
-	let covariances = calculate_covariances(&contexts, &code);
+	let covariances = calculate_covariances_map(&contexts, &code);
 
-	for ((x, y), cov) in covariances.indexed_iter() {
-		println!("x: {0}, y: {1}, cov: {2}", x, y, cov);
-	}
+	// for ((x, y), cov) in covariances.indexed_iter() {
+	// 	println!("x: {0}, y: {1}, cov: {2}", x, y, cov);
+	// }
 }
 
-fn calculate_covariances(contexts: &ContextMap, code: &BitVector) -> Array2<f32> {
+fn calculate_covariances_map(contexts: &ContextMap, code: &BitVector) -> Array2<f32> {
 	let covariances: Array2<f32> = contexts.map(|context| {
 		let covariance = context
 			.memory
@@ -31,4 +31,8 @@ fn calculate_covariances(contexts: &ContextMap, code: &BitVector) -> Array2<f32>
 		covariance
 	});
 	covariances
+}
+
+fn build_contexts_distances(covariances: Array2<f32>) -> (f32, Vec<(usize, usize)>) {
+	(0., vec![])
 }
