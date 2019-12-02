@@ -6,6 +6,7 @@ pub mod context_map;
 use bitvector::BitVector;
 use context_map::ContextMap;
 use ndarray::Array2;
+use float_cmp::ApproxOrdUlps;
 
 pub fn learn(contexts: &mut ContextMap, code: &BitVector) {
 	// get covariances for the contexts
@@ -61,4 +62,23 @@ fn calculate_contexts_covariances_distances(covariances: &Array2<f32>) -> (f32, 
         .collect();
 
 	(total_distance, contexts_distances)
+}
+
+fn get_candidate_coordinates(distances: &Vec<((usize, usize), f32)>, total_distance: &f32) -> (usize, usize) {
+    let mut rng = rand::thread_rng();
+
+    // Random value to be used for candidate selection.
+    // The larger the covariance, the more chances are that
+    // this context will be selected by the binary search.
+    let pick = rng.gen_range(0., total_distance);
+
+    // Find an index of a segment that encloses random value.
+    let target_index = match distances.binary_search_by(|(_, distance)| distance.approx_cmp_ulps(&pick, 2)) {
+        Ok(index) => index,
+        Err(index) => index,
+    };
+
+
+
+    (1, 1)
 }
