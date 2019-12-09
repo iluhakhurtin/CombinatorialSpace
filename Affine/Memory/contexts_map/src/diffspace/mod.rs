@@ -4,11 +4,12 @@ pub mod code_space;
 mod context;
 pub mod context_map;
 use bitvector::BitVector;
+use context::Context;
 use context_map::ContextMap;
 use float_cmp::ApproxOrdUlps;
-use ndarray::{Array2, s};
-use rand::Rng;
+use ndarray::{s, Array2};
 use num_complex::Complex32 as Complex;
+use rand::Rng;
 
 pub fn learn(contexts: &mut ContextMap, code: &BitVector) {
 	// get covariances for the contexts
@@ -18,8 +19,11 @@ pub fn learn(contexts: &mut ContextMap, code: &BitVector) {
 	let (total_distance, distances) = calculate_contexts_covariances_distances(&covariances);
 
 	// winner context's coordinates
-    let candidate_coordinates = get_winner_coordinates(&total_distance, &distances);
-    let candidate_center = Complex::new(candidate_coordinates.1 as f32, candidate_coordinates.0 as f32);
+	let candidate_coordinates = get_winner_coordinates(&total_distance, &distances);
+	let candidate_center = Complex::new(
+		candidate_coordinates.1 as f32,
+		candidate_coordinates.0 as f32,
+	);
 
 	// get contexts map dimentions
 	let learn_range = get_learn_range();
@@ -35,32 +39,22 @@ pub fn learn(contexts: &mut ContextMap, code: &BitVector) {
 	let end_x = candidate_coordinates.1 as isize + learn_range;
 	let range_x = clamp_index(&start_x, &max_dim_x)..=clamp_index(&end_x, &max_dim_x);
 
-    let mut learn_region = contexts.slice_mut(s![range_y, range_x]);
-    
-    let max_learn_distance = get_max_learn_distance();
+	let mut learn_region = contexts.slice_mut(s![range_y.clone(), range_x.clone()]);
 
-    for ((y, x), context) in learn_region.indexed_iter_mut() {
-        // Calculate distance from the target context to current one from its immediate surroundings.
-        let (real_y, real_x) = (y + range_y.start(), x + range_x.start());
-        let distance = (Complex::new(real_x as f32, real_y as f32) - candidate_center).norm();
+	let max_learn_distance = get_max_learn_distance();
+	for ((y, x), context) in learn_region.indexed_iter_mut() {
+		// Calculate distance from the target context to current one from its immediate surroundings.
+		let (real_y, real_x) = (y + range_y.start(), x + range_x.start());
+		let distance = (Complex::new(real_x as f32, real_y as f32) - candidate_center).norm();
 
-        if distance > 5. { continue }
+		if distance > max_learn_distance {
+			continue;
+		}
 
-        // Neighboring contexts are updated with a proportionally smaller tip.
-        // let tip = |distance| (1. - distance / 5.6); // * (p / 8.);
-        let tip = |distance| ((1. - distance / 5.6) as f32).powf(2.);
+		let tip = calculate_context_tip(&distance);
 
-        // println!("context local {:?} -> real {:?}, distance {}, tip {}",
-        //     (y, x),
-        //     (real_y, real_x),
-        //     distance,
-        //     tip(distance),
-        // );
-
-        update_context(context, input, tip(distance));
-
-        // println!("{:?}", context);
-    }
+		update_context(context, &code, &tip);
+	}
 }
 
 fn calculate_covariances_map(contexts: &ContextMap, code: &BitVector) -> Array2<f32> {
@@ -144,6 +138,8 @@ fn clamp_index(index: &isize, max_dim: &usize) -> usize {
 	})
 }
 
+fn update_context(context: &mut Context, code: &BitVector, tip: &f32) {}
+
 fn get_min_covariance() -> f32 {
 	0.0001
 }
@@ -153,5 +149,11 @@ fn get_learn_range() -> isize {
 }
 
 fn get_max_learn_distance() -> f32 {
-    5.
+	5.
+}
+
+fn calculate_context_tip(distance: &f32) -> f32 {
+	// Neighboring contexts are updated with a proportionally smaller tip.
+	let tip = ((1. - distance / 5.6) as f32).powf(2.);
+	tip
 }
