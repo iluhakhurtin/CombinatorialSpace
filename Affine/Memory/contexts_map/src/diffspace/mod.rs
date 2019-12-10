@@ -13,7 +13,7 @@ use ndarray::{s, Array2};
 use num_complex::Complex32 as Complex;
 use rand::Rng;
 
-pub fn learn(contexts: &mut ContextMap, code: &BitVector) {
+pub fn learn(contexts: &mut ContextMap, code: BitVector) {
 	// get covariances for the contexts
 	let covariances = calculate_covariances_map(&contexts, &code);
 
@@ -53,7 +53,7 @@ pub fn learn(contexts: &mut ContextMap, code: &BitVector) {
 			continue;
 		}
 
-		// update_context(context, code);
+		update_context(context, code);
 	}
 }
 
