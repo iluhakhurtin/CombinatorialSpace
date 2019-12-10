@@ -3,9 +3,11 @@ pub mod bitvector;
 pub mod code_space;
 mod context;
 pub mod context_map;
+mod context_memory_item;
 use bitvector::BitVector;
 use context::Context;
 use context_map::ContextMap;
+use context_memory_item::ContextMemoryItem;
 use float_cmp::ApproxOrdUlps;
 use ndarray::{s, Array2};
 use num_complex::Complex32 as Complex;
@@ -51,9 +53,7 @@ pub fn learn(contexts: &mut ContextMap, code: &BitVector) {
 			continue;
 		}
 
-		let tip = calculate_context_tip(&distance);
-
-		update_context(context, &code, &tip);
+		// update_context(context, code);
 	}
 }
 
@@ -62,9 +62,9 @@ fn calculate_covariances_map(contexts: &ContextMap, code: &BitVector) -> Array2<
 		let covariance = context
 			.memory
 			.iter()
-			.map(|(memory_code, hits)| {
-				let correlation = analytics::correlation(&memory_code.value(), &code.value());
-				let full_correlation = *hits as f32 * correlation;
+			.map(|memory_item| {
+				let correlation = analytics::correlation(&memory_item.code.value(), &code.value());
+				let full_correlation = memory_item.hits as f32 * correlation;
 				full_correlation
 			})
 			.sum();
@@ -138,7 +138,43 @@ fn clamp_index(index: &isize, max_dim: &usize) -> usize {
 	})
 }
 
-fn update_context(context: &mut Context, code: &BitVector, tip: &f32) {}
+fn update_context(context: &mut Context, code: BitVector) {
+	// Find a memory item with the lower hits value in the same
+	// loop for the case if a match is not found
+	let mut min_hits_value: i32 = -1;
+	let mut min_hits_idx: usize = 0;
+	for (idx, memory_item) in context.memory.iter_mut().enumerate() {
+		if memory_item.code.value() == code.value() {
+			memory_item.hits += 1;
+			return;
+		}
+
+		if min_hits_value == -1 {
+			min_hits_value = memory_item.hits as i32;
+			min_hits_idx = idx;
+			continue;
+		}
+
+		if min_hits_value > (memory_item.hits as i32) {
+			min_hits_value = memory_item.hits as i32;
+			min_hits_idx = idx;
+			continue;
+		}
+	}
+
+	// add new element in the memory and if the memory is full
+	// remove another with the minimum hits
+	let max_memory_size = get_max_memory_size();
+	if context.memory.len() == max_memory_size {
+		context.memory.remove(min_hits_idx);
+	}
+
+	let new_memory_item = ContextMemoryItem {
+		code: code.clone(),
+		hits: 0,
+	};
+	context.memory.push(new_memory_item);
+}
 
 fn get_min_covariance() -> f32 {
 	0.0001
@@ -152,8 +188,6 @@ fn get_max_learn_distance() -> f32 {
 	5.
 }
 
-fn calculate_context_tip(distance: &f32) -> f32 {
-	// Neighboring contexts are updated with a proportionally smaller tip.
-	let tip = ((1. - distance / 5.6) as f32).powf(2.);
-	tip
+fn get_max_memory_size() -> usize {
+	20
 }

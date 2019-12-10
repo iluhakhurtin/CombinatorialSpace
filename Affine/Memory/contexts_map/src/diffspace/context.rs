@@ -1,6 +1,6 @@
-use super::bitvector::BitVector;
+use super::context_memory_item::ContextMemoryItem;
 
 #[derive(Default, Debug, Clone)]
 pub struct Context {
-	pub memory: Vec<(BitVector, u32)>,
+	pub memory: Vec<ContextMemoryItem>,
 }
