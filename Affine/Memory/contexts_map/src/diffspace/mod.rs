@@ -13,9 +13,9 @@ use ndarray::{s, Array2};
 use num_complex::Complex32 as Complex;
 use rand::Rng;
 
-pub fn learn(contexts: &mut ContextMap, code: BitVector) {
+pub fn learn(contexts: &mut ContextMap, code: &BitVector) {
 	// get covariances for the contexts
-	let covariances = calculate_covariances_map(&contexts, &code);
+	let covariances = calculate_covariances_map(&contexts, code);
 
 	// get contexts' covariances distances map with total distance
 	let (total_distance, distances) = calculate_contexts_covariances_distances(&covariances);
@@ -125,7 +125,7 @@ fn clamp_index(index: &isize, max_dim: &usize) -> usize {
 	})
 }
 
-fn update_context(context: &mut Context, code: BitVector) {
+fn update_context(context: &mut Context, code: &BitVector) {
 	// Find a memory item with the lower hits value in the same
 	// loop for the case if a match is not found
 	let mut min_hits_value: i32 = -1;
