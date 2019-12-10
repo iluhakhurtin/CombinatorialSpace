@@ -1,4 +1,4 @@
-pub mod analytics;
+mod analytics;
 pub mod bitvector;
 pub mod code_space;
 mod context;
@@ -59,20 +59,7 @@ pub fn learn(contexts: &mut ContextMap, code: BitVector) {
 
 fn calculate_covariances_map(contexts: &ContextMap, code: &BitVector) -> Array2<f32> {
 	let covariances: Array2<f32> = contexts.map(|context| {
-		let covariance = context
-			.memory
-			.iter()
-			.map(|memory_item| {
-				let correlation = analytics::correlation(&memory_item.code.value(), &code.value());
-				let full_correlation = memory_item.hits as f32 * correlation;
-				full_correlation
-			})
-			.sum();
-
-		if covariance == 0f32 {
-			let result = get_min_covariance();
-			return result;
-		}
+		let covariance = context.covariance(code);
 		covariance
 	});
 	covariances
@@ -174,10 +161,6 @@ fn update_context(context: &mut Context, code: BitVector) {
 		hits: 0,
 	};
 	context.memory.push(new_memory_item);
-}
-
-fn get_min_covariance() -> f32 {
-	0.0001
 }
 
 fn get_learn_range() -> isize {
