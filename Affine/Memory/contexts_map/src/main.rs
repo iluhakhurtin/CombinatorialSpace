@@ -29,12 +29,19 @@ fn main() {
 	}
 }
 
-fn draw_contexts(contexts: &ContextMap, code: &BitVector, step: &usize) {
+fn draw_contexts_activation_map(contexts: &ContextMap, code: &BitVector, step: &usize) {
 	let shape = contexts.shape();
 	let height = shape[0] as u32;
 	let width = shape[1] as u32;
 
+	//type GrayImage = ImageBuffer<Luma<u8>, Vec<u8>>;
 	let mut image = image::GrayImage::new(width, height);
 
-	//let pixel: [u8, 3] =
+	for ((y, x), context) in contexts.indexed_iter() {
+		let covariance = context.covariance(code);
+		let brightness: u8 = covariance.round().clamp(0., 255.) as u8;
+
+		let pixel: image::Luma<u8> = image::Luma([brightness]);
+		image.put_pixel(x as u32, y as u32, pixel);
+	}
 }
