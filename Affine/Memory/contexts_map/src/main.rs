@@ -22,9 +22,10 @@ fn main() {
 		}
 
 		// print every 100-th step
-		if step % 100 > 0 {
-
-			// draw_contexts(&contexts, &code, &step);
+		if step % 1000 > 0 {
+			let random_code_idx = rng.gen_range(0, inputs.len());
+			let code = inputs[random_code_idx];
+			draw_contexts_activation_map(&contexts, &code, &step);
 		}
 	}
 }
@@ -38,10 +39,18 @@ fn draw_contexts_activation_map(contexts: &ContextMap, code: &BitVector, step: &
 	let mut image = image::GrayImage::new(width, height);
 
 	for ((y, x), context) in contexts.indexed_iter() {
-		let covariance = context.covariance(code);
-		let brightness: u8 = covariance.round().clamp(0., 255.) as u8;
+		let covariance_round = context.covariance(code).round();
+		let brightness: u8 = if covariance_round > 255. {
+			255
+		} else {
+			covariance_round as u8
+		};
 
 		let pixel: image::Luma<u8> = image::Luma([brightness]);
 		image.put_pixel(x as u32, y as u32, pixel);
 	}
+
+	image
+		.save(format!("output/activation_maps/{}.png", step))
+		.unwrap();
 }
