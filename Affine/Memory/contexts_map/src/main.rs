@@ -11,8 +11,11 @@ fn main() {
 	const CONTEXT_MAP_MAX_DIM: usize = 64;
 	let mut contexts = diffspace::context_map::generate_context_map(CONTEXT_MAP_MAX_DIM);
 
-	let mut rng = rand::thread_rng();
 	let mut inputs: Vec<_> = codes.iter().cloned().collect();
+
+	let mut rng = rand::thread_rng();
+	let random_code_idx = rng.gen_range(0, inputs.len());
+	let test_code = inputs[random_code_idx];
 
 	for step in 1.. {
 		rng.shuffle(&mut inputs);
@@ -22,10 +25,8 @@ fn main() {
 		}
 
 		// print every 100-th step
-		if step % 1000 > 0 {
-			let random_code_idx = rng.gen_range(0, inputs.len());
-			let code = inputs[random_code_idx];
-			draw_contexts_activation_map(&contexts, &code, &step);
+		if step % 10000 > 0 {
+			draw_contexts_activation_map(&contexts, &test_code, &step);
 		}
 	}
 }
@@ -39,7 +40,8 @@ fn draw_contexts_activation_map(contexts: &ContextMap, code: &BitVector, step: &
 	let mut image = image::GrayImage::new(width, height);
 
 	for ((y, x), context) in contexts.indexed_iter() {
-		let covariance_round = context.covariance(code).round();
+		let covariance_round = 5. * context.covariance(code).round();
+
 		let brightness: u8 = if covariance_round > 255. {
 			255
 		} else {
