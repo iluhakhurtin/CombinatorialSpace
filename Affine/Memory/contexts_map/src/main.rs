@@ -6,6 +6,7 @@ use diffspace::code_space::CodeSpace;
 use diffspace::context_map::ContextMap;
 use diffspace::learn;
 use rand::Rng;
+use std::iter::FromIterator;
 
 fn main() {
 	let codes = diffspace::code_space::generate_code_space();
@@ -18,14 +19,13 @@ fn main() {
 
 	let mut rng = rand::thread_rng();
 
-	let mut random_code_idx = 0;
-	while random_code_idx == 0 || random_code_idx == inputs.len() - 1 {
-		random_code_idx = rng.gen_range(0, inputs.len());
-	}
+	let test_codes = Vec::from_iter(inputs[0..100].iter().cloned());
 
-	let test_code_r = inputs[random_code_idx];
-	let test_code_g = inputs[random_code_idx + 1];
-	let test_code_b = inputs[random_code_idx - 1];
+	// calculate output image width and height
+	let shape = contexts.shape();
+	let fragment_height = shape[0] as u32 + 2; //2 is for printing the code on the bottom and separator
+	let height = test_codes.len() as u32 * fragment_height;
+	let width = 128;
 
 	for step in 1.. {
 		rng.shuffle(&mut inputs);
@@ -35,21 +35,19 @@ fn main() {
 		}
 
 		// print every n-th step
-		if step % 10000 > 0 {
-			let shape = contexts.shape();
-			let height = shape[0] as u32 + 2; //2 is for printing the code on the top
-			let width = 128;
+		if step % 10 == 0 {
 			let mut start_x = 0;
 			let mut start_y = 0;
 
 			//type GrayImage = ImageBuffer<Luma<u8>, Vec<u8>>;
 			let mut image = image::GrayImage::new(width, height);
-			draw_contexts_activation_map(&contexts, &test_code_r, &mut image, start_x, start_y);
 
-			// let file_name = format!("g_{}.png", step);
-			// draw_contexts_activation_map(&contexts, &test_code_g, &image);
-			// let file_name = format!("b_{}.png", step);
-			// draw_contexts_activation_map(&contexts, &test_code_b, &image);
+			for test_code in &test_codes {
+				draw_contexts_activation_map(&contexts, test_code, &mut image, start_x, start_y);
+				start_y += fragment_height;
+			}
+
+			// save image to file
 			let file_name = format!("{}.png", step);
 			image
 				.save(format!("output/activation_maps/{}", file_name))
@@ -100,21 +98,21 @@ fn draw_contexts_activation_map(
 		image.put_pixel(new_x, new_y, pixel);
 	}
 
-	// 2. Print separator
+	// 2. Print the code: white is 1
 	let width = 128;
 	let shape = contexts.shape();
-	let pixel: image::Luma<u8> = image::Luma([128]);
-	let mut y = shape[0] as u32;
-	for x in 0..width {
-		image.put_pixel(x, y, pixel);
-	}
-
-	// 3. Print the code: white is 1
-	y += 1;
+	let mut y = start_y + shape[0] as u32;
 	for x in 0..width {
 		let brightness = if code[x as usize] { 255 } else { 0 };
 
 		let pixel: image::Luma<u8> = image::Luma([brightness]);
+		image.put_pixel(x, y, pixel);
+	}
+
+	// 3. Print separator
+	let pixel: image::Luma<u8> = image::Luma([128]);
+	y += 1;
+	for x in 0..width {
 		image.put_pixel(x, y, pixel);
 	}
 }
