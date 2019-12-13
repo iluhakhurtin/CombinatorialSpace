@@ -168,9 +168,9 @@ fn get_learn_range() -> isize {
 }
 
 fn get_max_learn_distance() -> f32 {
-	5.
+	3.
 }
 
 fn get_max_memory_size() -> usize {
-	20
+	10
 }

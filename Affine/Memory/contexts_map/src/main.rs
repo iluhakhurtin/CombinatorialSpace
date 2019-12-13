@@ -2,12 +2,14 @@
 extern crate derive_more;
 mod diffspace;
 use diffspace::bitvector::BitVector;
+use diffspace::code_space::CodeSpace;
 use diffspace::context_map::ContextMap;
 use diffspace::learn;
 use rand::Rng;
 
 fn main() {
 	let codes = diffspace::code_space::generate_code_space();
+	draw_codes(&codes);
 	const CONTEXT_MAP_MAX_DIM: usize = 64;
 	let mut contexts = diffspace::context_map::generate_context_map(CONTEXT_MAP_MAX_DIM);
 
@@ -24,11 +26,30 @@ fn main() {
 			learn(&mut contexts, &code);
 		}
 
-		// print every 100-th step
+		// print every n-th step
 		if step % 10000 > 0 {
 			draw_contexts_activation_map(&contexts, &test_code, &step);
 		}
 	}
+}
+
+fn draw_codes(codes: &CodeSpace) {
+	let width = 128;
+	let height = codes.len() as u32;
+	let mut image = image::GrayImage::new(width, height);
+
+	let mut row = -1;
+	for (code) in codes.iter() {
+		row += 1;
+		for i in 0..128 {
+			let brightness = if code[i] { 255 } else { 0 };
+
+			let pixel: image::Luma<u8> = image::Luma([brightness]);
+			image.put_pixel(i as u32, row as u32, pixel);
+		}
+	}
+
+	image.save("output/code_space.png").unwrap();
 }
 
 fn draw_contexts_activation_map(contexts: &ContextMap, code: &BitVector, step: &usize) {
