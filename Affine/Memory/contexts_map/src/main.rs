@@ -19,7 +19,8 @@ fn main() {
 
 	let mut rng = rand::thread_rng();
 
-	let test_codes = Vec::from_iter(inputs[0..100].iter().cloned());
+	//let test_codes = Vec::from_iter(inputs[0..100].iter().cloned());
+	let test_codes = Vec::from_iter(inputs.iter().cloned());
 
 	// calculate output image width and height
 	let shape = contexts.shape();
@@ -35,7 +36,7 @@ fn main() {
 		}
 
 		// print every n-th step
-		if step % 10 == 0 {
+		if step % 50 == 0 {
 			let mut start_x = 0;
 			let mut start_y = 0;
 
