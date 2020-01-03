@@ -17,11 +17,8 @@ pub fn learn(contexts: &mut ContextMap, code: &BitVector) {
 	// get covariances for the contexts
 	let covariances = calculate_covariances_map(&contexts, code);
 
-	// get contexts' covariances distances map with total distance
-	let (total_distance, distances) = calculate_contexts_covariances_distances(&covariances);
-
 	// winner context's coordinates
-	let candidate_coordinates = get_winner_coordinates(&total_distance, &distances);
+	let candidate_coordinates = get_winner_coordinates(&covariances);
 	let candidate_center = Complex::new(
 		candidate_coordinates.1 as f32,
 		candidate_coordinates.0 as f32,
@@ -54,6 +51,12 @@ pub fn learn(contexts: &mut ContextMap, code: &BitVector) {
 		}
 
 		update_context(context, code);
+	}
+}
+
+pub fn consolidate(contexts: &mut ContextMap) {
+	for context in contexts {
+		context.consolidate();
 	}
 }
 
@@ -94,10 +97,14 @@ fn calculate_contexts_covariances_distances(
 	(total_distance, contexts_distances)
 }
 
-fn get_winner_coordinates(
-	total_distance: &f32,
-	distances: &Vec<((usize, usize), f32)>,
-) -> (usize, usize) {
+fn get_winner_coordinates(covariances: &Array2<f32>) -> (usize, usize) {
+	// Look through the contexts and try to get a set of contexts with a
+	// covariance that is in the given range.
+	// If there is no any contexts then decrease the covariance range.
+
+	// get contexts' covariances distances map with total distance
+	let (total_distance, distances) = calculate_contexts_covariances_distances(covariances);
+
 	let mut rng = rand::thread_rng();
 
 	// Random value to be used for candidate selection.

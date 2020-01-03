@@ -1,10 +1,11 @@
 #[macro_use]
 extern crate derive_more;
+extern crate ndarray;
 mod diffspace;
 use diffspace::bitvector::BitVector;
 use diffspace::code_space::CodeSpace;
 use diffspace::context_map::ContextMap;
-use diffspace::learn;
+use diffspace::{consolidate, learn};
 use rand::Rng;
 use std::iter::FromIterator;
 
@@ -33,6 +34,10 @@ fn main() {
 
 		for code in inputs.iter() {
 			learn(&mut contexts, &code);
+		}
+
+		if step % 20 == 0 {
+			consolidate(&mut contexts);
 		}
 
 		// print every n-th step

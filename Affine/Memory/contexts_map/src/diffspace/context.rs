@@ -27,6 +27,19 @@ impl Context {
 	}
 
 	fn get_min_covariance() -> f32 {
-		0.0001
+		0.9
+	}
+
+	fn get_min_hits_to_retain() -> u32 {
+		2
+	}
+
+	pub fn consolidate(&mut self) {
+		let min_hits_to_retain = Context::get_min_hits_to_retain();
+
+		self.memory.retain(|memory_item| {
+			let keep = memory_item.hits > min_hits_to_retain;
+			keep
+		});
 	}
 }
