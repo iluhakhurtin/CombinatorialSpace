@@ -13,6 +13,15 @@ use ndarray::{s, Array2};
 use num_complex::Complex32 as Complex;
 use rand::Rng;
 
+pub fn get_winner_coordinates_for_code(contexts: &ContextMap, code: &BitVector) -> (usize, usize) {
+	// get covariances for the contexts
+	let covariances = calculate_covariances_map(&contexts, code);
+	// winner context's coordinates
+	let candidate_coordinates = get_winner_coordinates(&covariances);
+
+	candidate_coordinates
+}
+
 pub fn learn(contexts: &mut ContextMap, code: &BitVector) {
 	// get covariances for the contexts
 	let covariances = calculate_covariances_map(&contexts, code);

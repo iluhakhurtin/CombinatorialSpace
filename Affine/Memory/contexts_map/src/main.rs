@@ -5,7 +5,7 @@ mod diffspace;
 use diffspace::bitvector::BitVector;
 use diffspace::code_space::CodeSpace;
 use diffspace::context_map::ContextMap;
-use diffspace::{consolidate, learn};
+use diffspace::{consolidate, get_winner_coordinates_for_code, learn};
 use rand::Rng;
 use std::iter::FromIterator;
 
@@ -36,7 +36,7 @@ fn main() {
 			learn(&mut contexts, &code);
 		}
 
-		if step % 20 == 0 {
+		if step % 30 == 0 {
 			consolidate(&mut contexts);
 		}
 
@@ -88,16 +88,19 @@ fn draw_contexts_activation_map(
 	start_x: u32,
 	start_y: u32,
 ) {
-	// 1. Print contexts activation map
+	// 1. Find and draw the winner
+	let (y, x) = get_winner_coordinates_for_code(contexts, code);
+	let winner_context = &contexts[[y, x]];
+	let winner_covariance = winner_context.covariance(code);
+
+	let covariance_round = 5. * winner_context.covariance(code).round();
+	let brightness: u8 = if covariance_round > 255. {
+		255
+	} else {
+		covariance_round as u8
+	};
+
 	for ((y, x), context) in contexts.indexed_iter() {
-		let covariance_round = 5. * context.covariance(code).round();
-
-		let brightness: u8 = if covariance_round > 255. {
-			255
-		} else {
-			covariance_round as u8
-		};
-
 		let pixel: image::Luma<u8> = image::Luma([brightness]);
 		let new_x = start_x + x as u32;
 		let new_y = start_y + y as u32;

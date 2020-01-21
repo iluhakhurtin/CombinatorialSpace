@@ -14,8 +14,18 @@ impl Context {
 			.iter()
 			.map(|memory_item| {
 				let correlation = analytics::correlation(&memory_item.code.value(), &code.value());
-				let full_correlation = memory_item.hits as f32 * correlation;
-				full_correlation
+				// use an activation function here, for example, ReLu=max(const, x)
+				// result of the function can be multiplied on hits to get 0 if the correlation
+				// is not enough and essential increase /if there is one
+				const threshold_correlation: f32 = 0.7;
+				let correlation = if correlation > threshold_correlation {
+					correlation
+				} else {
+					0f32
+				};
+
+				let result = memory_item.hits as f32 * correlation;
+				result
 			})
 			.sum();
 
@@ -27,7 +37,7 @@ impl Context {
 	}
 
 	fn get_min_covariance() -> f32 {
-		0.9
+		0.2
 	}
 
 	fn get_min_hits_to_retain() -> u32 {
