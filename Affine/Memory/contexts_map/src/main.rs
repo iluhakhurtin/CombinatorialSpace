@@ -28,7 +28,9 @@ fn main() {
 	let height = test_codes.len() as u32 * fragment_height;
 	let width = 128;
 
-	for step in 1.. {
+	let mut image = image::RgbImage::new(width, height);
+
+	for step in 1..200 {
 		rng.shuffle(&mut inputs);
 
 		// +++ teaching contexts map
@@ -46,19 +48,14 @@ fn main() {
 			let mut start_x = 0;
 			let mut start_y = 0;
 
-			let mut image = image::RgbImage::new(width, height);
-
 			for test_code in &test_codes {
-				draw_winner(&contexts, test_code, &mut image, start_x, start_y);
+				draw_winner(&contexts, test_code, &mut image, step, start_x, start_y);
 				start_y += fragment_height;
 			}
-
-			// save image to file
-			let file_name = format!("{}.png", step);
-			image
-				.save(format!("output/activation_maps/{}", file_name))
-				.unwrap();
 		}
+
+		// save image to file
+		image.save("output/combined_activation.png").unwrap();
 	}
 }
 
@@ -66,13 +63,18 @@ fn draw_winner(
 	contexts: &ContextMap,
 	code: &BitVector,
 	image: &mut image::RgbImage,
+	step: u32,
 	start_x: u32,
 	start_y: u32,
 ) {
 	// 1. Find and draw the winner
 	let (y, x) = get_winner_coordinates_for_code(contexts, code);
 	let winner_context = &contexts[[y, x]];
-	let pixel = image::Rgb([255, 0, 0]);
+
+	let r: u8 = 255;
+	let g: u8 = (step % 255 as u8).try_into().unwrap();
+	let b: u8 = (step % 255 as u8).try_into().unwrap();
+	let pixel = image::Rgb([r, g, b]);
 	let new_x = start_x + x as u32;
 	let new_y = start_y + y as u32;
 	image.put_pixel(new_x, new_y, pixel);
