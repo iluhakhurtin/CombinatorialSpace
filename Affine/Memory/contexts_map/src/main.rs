@@ -11,7 +11,6 @@ use std::iter::FromIterator;
 
 fn main() {
 	let codes = diffspace::code_space::generate_code_space();
-	// draw_codes_space(&codes);
 
 	const CONTEXT_MAP_MAX_DIM: usize = 64;
 	let mut contexts = diffspace::context_map::generate_context_map(CONTEXT_MAP_MAX_DIM);
@@ -20,8 +19,8 @@ fn main() {
 
 	let mut rng = rand::thread_rng();
 
-	//let test_codes = Vec::from_iter(inputs[0..100].iter().cloned());
-	let test_codes = Vec::from_iter(inputs.iter().cloned());
+	let test_codes = Vec::from_iter(inputs[0..20].iter().cloned());
+	// let test_codes = Vec::from_iter(inputs.iter().cloned());
 
 	// calculate output image width and height
 	let shape = contexts.shape();
@@ -32,6 +31,7 @@ fn main() {
 	for step in 1.. {
 		rng.shuffle(&mut inputs);
 
+		// +++ teaching contexts map
 		for code in inputs.iter() {
 			learn(&mut contexts, &code);
 		}
@@ -39,17 +39,17 @@ fn main() {
 		if step % 30 == 0 {
 			consolidate(&mut contexts);
 		}
+		// ---
 
 		// print every n-th step
 		if step % 50 == 0 {
 			let mut start_x = 0;
 			let mut start_y = 0;
 
-			//type GrayImage = ImageBuffer<Luma<u8>, Vec<u8>>;
 			let mut image = image::GrayImage::new(width, height);
 
 			for test_code in &test_codes {
-				draw_contexts_activation_map(&contexts, test_code, &mut image, start_x, start_y);
+				draw_winner(&contexts, test_code, &mut image, start_x, start_y);
 				start_y += fragment_height;
 			}
 
@@ -62,26 +62,7 @@ fn main() {
 	}
 }
 
-fn draw_codes_space(codes: &CodeSpace) {
-	let width = 128;
-	let height = codes.len() as u32;
-	let mut image = image::GrayImage::new(width, height);
-
-	let mut row = 0;
-	for (code) in codes.iter() {
-		for i in 0..width {
-			let brightness = if code[i as usize] { 255 } else { 0 };
-
-			let pixel: image::Luma<u8> = image::Luma([brightness]);
-			image.put_pixel(i as u32, row as u32, pixel);
-		}
-		row += 1;
-	}
-
-	image.save("output/code_space.png").unwrap();
-}
-
-fn draw_contexts_activation_map(
+fn draw_winner(
 	contexts: &ContextMap,
 	code: &BitVector,
 	image: &mut image::GrayImage,
@@ -91,21 +72,10 @@ fn draw_contexts_activation_map(
 	// 1. Find and draw the winner
 	let (y, x) = get_winner_coordinates_for_code(contexts, code);
 	let winner_context = &contexts[[y, x]];
-	let winner_covariance = winner_context.covariance(code);
-
-	let covariance_round = 5. * winner_context.covariance(code).round();
-	let brightness: u8 = if covariance_round > 255. {
-		255
-	} else {
-		covariance_round as u8
-	};
-
-	for ((y, x), context) in contexts.indexed_iter() {
-		let pixel: image::Luma<u8> = image::Luma([brightness]);
-		let new_x = start_x + x as u32;
-		let new_y = start_y + y as u32;
-		image.put_pixel(new_x, new_y, pixel);
-	}
+	let pixel: image::Luma<u8> = image::Luma([255]);
+	let new_x = start_x + x as u32;
+	let new_y = start_y + y as u32;
+	image.put_pixel(new_x, new_y, pixel);
 
 	// 2. Print the code: white is 1
 	let width = 128;
